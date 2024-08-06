@@ -39,6 +39,13 @@
         android:layout_height="wrap_content"
         android:text="Upload Model to Cloud" />
 
+    <Button
+        android:id="@+id/openPortfolioActivityButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Open Portfolio" />
+
+
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="match_parent"

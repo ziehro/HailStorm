@@ -21,6 +21,7 @@ public class PortfolioActivity extends AppCompatActivity {
     private TextView holdingsView;
     private ProgressBar progressBar;
     private Button fetchPortfolioButton;
+    private TextView predictionsView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +36,36 @@ public class PortfolioActivity extends AppCompatActivity {
 
         fetchPortfolioButton.setOnClickListener(v -> fetchPortfolio());
 
-        fetchPortfolio(); // Fetch portfolio when activity is created
+        predictionsView = findViewById(R.id.predictionsView);  // Ensure you have a TextView in your layout for predictions
+
+        fetchPortfolio();
+        fetchPredictions();
+    }
+
+    private void fetchPredictions() {
+        db.collection("predictions").document("latest")
+                .addSnapshotListener((documentSnapshot, e) -> {
+                    if (e != null) {
+                        Log.w("TAG", "Listen failed.", e);
+                        return;
+                    }
+                    if (documentSnapshot != null && documentSnapshot.exists()) {
+                        updatePredictionsUI(documentSnapshot.getData());
+                    } else {
+                        Log.d("TAG", "No prediction data available.");
+                    }
+                });
+    }
+
+    private void updatePredictionsUI(Map<String, Object> data) {
+        StringBuilder sb = new StringBuilder();
+        for (String key : data.keySet()) {
+            Map<String, Object> details = (Map<String, Object>) data.get(key);
+            sb.append(key).append(": ").append(details.get("Movement"))
+                    .append(" (Last Close: ").append(details.get("Last Close"))
+                    .append(", Predicted: ").append(details.get("Predicted Price")).append(")\n");
+        }
+        predictionsView.setText(sb.toString());
     }
 
     private void fetchPortfolio() {

@@ -2,6 +2,7 @@ package com.ziehro.hailstorm;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -29,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText frequencyInput;
     private ProgressBar progressBar;
     private TextView portfolioTextView;
-    private Button updateFrequencyButton, uploadModelButton, fetchPortfolioButton;
+    private Button updateFrequencyButton, uploadModelButton, fetchPortfolioButton, openPortfolioActivityButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,10 +45,14 @@ public class MainActivity extends AppCompatActivity {
         updateFrequencyButton = findViewById(R.id.updateFrequencyButton);
         uploadModelButton = findViewById(R.id.uploadModelButton);
         fetchPortfolioButton = findViewById(R.id.fetchPortfolioButton);
+        openPortfolioActivityButton = findViewById(R.id.openPortfolioActivityButton);  // Initialize the button
+
 
         updateFrequencyButton.setOnClickListener(v -> updateFrequency());
         uploadModelButton.setOnClickListener(v -> uploadModelToCloud());
         fetchPortfolioButton.setOnClickListener(v -> fetchPortfolio());
+        openPortfolioActivityButton.setOnClickListener(v -> openPortfolioActivity());  // Set click listener
+
     }
 
     private void updateFrequency() {
@@ -64,6 +69,11 @@ public class MainActivity extends AppCompatActivity {
                     Log.w("TAG", "Error updating frequency", e);
                     progressBar.setVisibility(View.GONE);
                 });
+    }
+
+    private void openPortfolioActivity() {
+        Intent intent = new Intent(MainActivity.this, PortfolioActivity.class);
+        startActivity(intent);
     }
 
     private void uploadModelToCloud() {
