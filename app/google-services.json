@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "816494855871",
+    "project_id": "hailstorm-537b3",
+    "storage_bucket": "hailstorm-537b3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:816494855871:android:555960e6ab9db34358e80a",
+        "android_client_info": {
+          "package_name": "com.ziehro.hailstorm"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD47BTPmnnq-joXajhZ9SjPQ5oZoOWZXo4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

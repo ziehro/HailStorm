@@ -1,0 +1,48 @@
+
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <EditText
+        android:id="@+id/frequencyInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter update frequency" />
+
+    <Button
+        android:id="@+id/updateFrequencyButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Update Frequency" />
+
+    <Button
+        android:id="@+id/fetchPortfolioButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Fetch Portfolio" />
+
+    <TextView
+        android:id="@+id/portfolioTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Portfolio will be displayed here"
+        android:padding="16dp"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/uploadModelButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Upload Model to Cloud" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+</LinearLayout>
