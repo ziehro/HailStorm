@@ -22,6 +22,7 @@ public class PortfolioActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private Button fetchPortfolioButton;
     private TextView predictionsView;
+    private TextView totalValueView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +34,8 @@ public class PortfolioActivity extends AppCompatActivity {
         holdingsView = findViewById(R.id.holdings);
         progressBar = findViewById(R.id.progressBar);
         fetchPortfolioButton = findViewById(R.id.fetchPortfolioButton);
+        totalValueView = findViewById(R.id.totalValue); // Add this line
+
 
         fetchPortfolioButton.setOnClickListener(v -> fetchPortfolio());
 
@@ -89,12 +92,42 @@ public class PortfolioActivity extends AppCompatActivity {
     }
 
     private void updateUI(Map<String, Object> data) {
-        capitalView.setText("Capital: $" + data.get("capital"));
-        Map<String, Double> holdings = (Map<String, Double>) data.get("holdings");
-        StringBuilder holdingsText = new StringBuilder();
-        for (String stock : holdings.keySet()) {
-            holdingsText.append(stock).append(": ").append(holdings.get(stock)).append(" shares\n");
+        // Safely convert "capital" to double
+        double capital = 0.0;
+        if (data.get("capital") instanceof Number) {
+            capital = ((Number) data.get("capital")).doubleValue();
         }
+        capitalView.setText("Capital: $" + capital);
+
+        // Safely cast "holdings" and "lastClose" to Maps
+        Map<String, Object> holdings = (Map<String, Object>) data.get("holdings");
+        Map<String, Object> lastClose = (Map<String, Object>) data.get("lastClose");
+
+        double totalValue = capital;
+        StringBuilder holdingsText = new StringBuilder();
+
+        for (String stock : holdings.keySet()) {
+            // Safely convert holdings value to double
+            double shares = 0.0;
+            if (holdings.get(stock) instanceof Number) {
+                shares = ((Number) holdings.get(stock)).doubleValue();
+            }
+
+            // Safely convert lastClose value to double
+            double stockPrice = 0.0;
+            if (lastClose.get(stock) instanceof Number) {
+                stockPrice = ((Number) lastClose.get(stock)).doubleValue();
+            }
+
+            double stockValue = shares * stockPrice;
+            totalValue += stockValue;
+            holdingsText.append(stock).append(": ").append(shares).append(" shares @ $")
+                    .append(stockPrice).append(" each (:$").append(String.format("%.2f", stockValue)).append(")\n");
+        }
+
         holdingsView.setText("Holdings:\n" + holdingsText.toString());
+        totalValueView.setText(String.format("Total Portfolio Value: $%.2f", totalValue));
     }
+
+
 }

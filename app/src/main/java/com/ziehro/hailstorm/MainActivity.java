@@ -22,6 +22,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
@@ -59,10 +60,15 @@ public class MainActivity extends AppCompatActivity {
         String frequency = frequencyInput.getText().toString();
         progressBar.setVisibility(View.VISIBLE);
 
+        // Prepare the data to update
+        Map<String, Object> updateData = new HashMap<>();
+        updateData.put("frequency", frequency);
+        updateData.put("reschedule", "yes");  // Set the reschedule flag to "yes"
+
         db.collection("config").document("updateFrequency")
-                .set(Collections.singletonMap("frequency", frequency))
+                .set(updateData)  // Update the document with new data
                 .addOnSuccessListener(aVoid -> {
-                    Log.d("TAG", "Frequency updated successfully");
+                    Log.d("TAG", "Frequency and reschedule flag updated successfully");
                     progressBar.setVisibility(View.GONE);
                 })
                 .addOnFailureListener(e -> {
@@ -70,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
                     progressBar.setVisibility(View.GONE);
                 });
     }
+
 
     private void openPortfolioActivity() {
         Intent intent = new Intent(MainActivity.this, PortfolioActivity.class);
