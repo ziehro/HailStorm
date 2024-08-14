@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private Button updateFrequencyButton, resetControlPortfolio, fetchPortfolioButton, openPortfolioActivityButton, openPortfolioAllButton;
 
     private double initialCapital = 10000.0;
+    private double controlTotalValue = 0.0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -134,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
             double value = entry.getValue();
 
             int color;
-            if (value < initialCapital) {
+            if (value < controlTotalValue) {
                 // Set color to red if the portfolio value is below $10,000
                 color = Color.rgb(255, 0, 0);
             } else {
@@ -454,6 +455,7 @@ public class MainActivity extends AppCompatActivity {
                                     Double stockPrice = (lastClose.get(ticker) instanceof Number) ? ((Number) lastClose.get(ticker)).doubleValue() : 0.0;
 
                                     totalValue += shares * stockPrice;
+                                    controlTotalValue = totalValue;
                                 }
 
                                 controlPortfolio.put("capital", totalValue);
