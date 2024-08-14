@@ -36,6 +36,12 @@
         <activity android:name=".SettingsActivity"
             android:exported="true">
         </activity>
+        <activity android:name=".PortfolioActivityAll"
+            android:exported="true">
+        </activity>
+        <activity android:name=".PortfolioFragment"
+            android:exported="true">
+        </activity>
 
         <!-- Portfolio Activity -->
         <activity android:name=".PortfolioActivity">

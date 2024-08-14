@@ -19,7 +19,7 @@
         android:text="Update Frequency" />
 
     <Button
-        android:id="@+id/uploadModelButton"
+        android:id="@+id/resetControlButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Upload Model to Cloud" />

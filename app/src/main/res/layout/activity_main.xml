@@ -1,5 +1,4 @@
-
-
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -26,25 +25,198 @@
         android:text="Fetch Portfolio" />
 
     <TextView
-        android:id="@+id/portfolioTextView"
+        android:id="@+id/controlPortfolioTotalValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:text="Control Portfolio Total Value: $0.00" />
+
+
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Portfolio will be displayed here"
-        android:padding="16dp"
-        android:textSize="16sp" />
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <View
+            android:id="@+id/portfolio0ColorBox"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginRight="8dp"
+            android:background="#D3D3D3" /> <!-- Default color -->
+        <TextView
+            android:id="@+id/portfolio0TotalValue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:text="Portfolio 0 Total Value: $0.00"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <View
+            android:id="@+id/portfolio1ColorBox"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginRight="8dp"
+            android:background="#D3D3D3" /> <!-- Default color -->
+
+        <TextView
+            android:id="@+id/portfolio1TotalValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Portfolio 1 Total Value: $0.00"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <View
+            android:id="@+id/portfolio2ColorBox"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginRight="8dp"
+            android:background="#D3D3D3" /> <!-- Default color -->
+
+        <TextView
+            android:id="@+id/portfolio2TotalValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Portfolio 2 Total Value: $0.00"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <View
+            android:id="@+id/portfolio3ColorBox"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginRight="8dp"
+            android:background="#D3D3D3" /> <!-- Default color -->
+
+        <TextView
+            android:id="@+id/portfolio3TotalValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Portfolio 3 Total Value: $0.00"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <View
+            android:id="@+id/portfolio4ColorBox"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginRight="8dp"
+            android:background="#D3D3D3" /> <!-- Default color -->
+
+        <TextView
+            android:id="@+id/portfolio4TotalValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Portfolio 4 Total Value: $0.00"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <View
+            android:id="@+id/portfolio5ColorBox"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginRight="8dp"
+            android:background="#D3D3D3" /> <!-- Default color -->
+
+        <TextView
+            android:id="@+id/portfolio5TotalValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Portfolio 5 Total Value: $0.00"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <View
+            android:id="@+id/portfolio6ColorBox"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginRight="8dp"
+            android:background="#D3D3D3" /> <!-- Default color -->
+
+        <TextView
+            android:id="@+id/portfolio6TotalValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Portfolio 6 Total Value: $0.00"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 
     <Button
-        android:id="@+id/uploadModelButton"
+        android:id="@+id/resetControlButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Upload Model to Cloud" />
+        android:layout_marginTop="16dp"
+        android:text="Reset Control Portfolio" />
+
+    <Button
+        android:id="@+id/resetPortfolioButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Reset Portfolio" />
+
+    <Button
+        android:id="@+id/resetAllPortfoliosButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Reset 6 Portfolios" />
 
     <Button
         android:id="@+id/openPortfolioActivityButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:text="Open Portfolio" />
 
+    <Button
+        android:id="@+id/openPortfolioAllActivityButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Open All Portfolios" />
 
     <ProgressBar
         android:id="@+id/progressBar"

@@ -1,14 +1,17 @@
 package com.ziehro.hailstorm;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
+import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -17,39 +20,40 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class PortfolioActivity extends AppCompatActivity {
+public class PortfolioFragment extends Fragment {
 
     private FirebaseFirestore db;
     private TextView capitalView;
     private TextView holdingsView;
     private ProgressBar progressBar;
-    private Button fetchPortfolioButton;
     private TextView predictionsView;
     private TextView totalValueView;
+    private String portfolioId;
 
+    public PortfolioFragment(String portfolioId) {
+        this.portfolioId = portfolioId;
+    }
+
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_portfolio);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_portfolio, container, false);
 
         db = FirebaseFirestore.getInstance();
-        capitalView = findViewById(R.id.capital);
-        holdingsView = findViewById(R.id.holdings);
-        progressBar = findViewById(R.id.progressBar);
-        fetchPortfolioButton = findViewById(R.id.fetchPortfolioButton);
-        totalValueView = findViewById(R.id.totalValue); // Add this line
-
-
-        fetchPortfolioButton.setOnClickListener(v -> fetchPortfolio());
-
-        predictionsView = findViewById(R.id.predictionsView);  // Ensure you have a TextView in your layout for predictions
+        capitalView = view.findViewById(R.id.capital);
+        holdingsView = view.findViewById(R.id.holdings);
+        progressBar = view.findViewById(R.id.progressBar);
+        predictionsView = view.findViewById(R.id.predictionsView);
+        totalValueView = view.findViewById(R.id.totalValue);
 
         fetchPortfolio();
         fetchPredictions();
+
+        return view;
     }
 
     private void fetchPredictions() {
-        db.collection("predictions").document("latest")
+        db.collection(portfolioId).document("predictions")
                 .addSnapshotListener((documentSnapshot, e) -> {
                     if (e != null) {
                         Log.w("TAG", "Listen failed.", e);
@@ -64,13 +68,11 @@ public class PortfolioActivity extends AppCompatActivity {
     }
 
     private void updatePredictionsUI(Map<String, Object> data) {
-        // Create a sorted list of the keys (ticker names) from the data map
         List<String> sortedKeys = new ArrayList<>(data.keySet());
         Collections.sort(sortedKeys);
 
         StringBuilder sb = new StringBuilder();
         for (String key : sortedKeys) {
-            // Cast the details to a Map
             Map<String, Object> details = (Map<String, Object>) data.get(key);
             sb.append(key).append(": ").append(details.get("Movement"))
                     .append(" (Last Close: ").append(details.get("Last Close"))
@@ -79,54 +81,48 @@ public class PortfolioActivity extends AppCompatActivity {
         predictionsView.setText(sb.toString());
     }
 
-
     private void fetchPortfolio() {
         progressBar.setVisibility(View.VISIBLE);
 
-        db.collection("portfolio").document("latest")
+        db.collection(portfolioId).document("latest")
                 .addSnapshotListener((documentSnapshot, e) -> {
                     progressBar.setVisibility(View.GONE);
                     if (e != null) {
                         Log.w("TAG", "Listen failed.", e);
-                        Toast.makeText(PortfolioActivity.this, "Error fetching portfolio", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Error fetching portfolio", Toast.LENGTH_SHORT).show();
                         return;
                     }
                     if (documentSnapshot != null && documentSnapshot.exists()) {
                         updateUI(documentSnapshot.getData());
                     } else {
                         Log.d("TAG", "Current data: null");
-                        Toast.makeText(PortfolioActivity.this, "No portfolio data found", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "No portfolio data found", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
 
     private void updateUI(Map<String, Object> data) {
-        // Safely convert "capital" to double
         double capital = 0.0;
         if (data.get("capital") instanceof Number) {
             capital = ((Number) data.get("capital")).doubleValue();
         }
         capitalView.setText("Capital: $" + capital);
 
-        // Safely cast "holdings" and "lastClose" to Maps
         Map<String, Object> holdings = (Map<String, Object>) data.get("holdings");
         Map<String, Object> lastClose = (Map<String, Object>) data.get("lastClose");
 
         double totalValue = capital;
         StringBuilder holdingsText = new StringBuilder();
 
-        // Create a sorted list of stock names (keys)
         List<String> sortedStocks = new ArrayList<>(holdings.keySet());
-        Collections.sort(sortedStocks); // Sorts alphabetically
+        Collections.sort(sortedStocks);
 
         for (String stock : sortedStocks) {
-            // Safely convert holdings value to double
             double shares = 0.0;
             if (holdings.get(stock) instanceof Number) {
                 shares = ((Number) holdings.get(stock)).doubleValue();
             }
 
-            // Safely convert lastClose value to double
             double stockPrice = 0.0;
             if (lastClose.get(stock) instanceof Number) {
                 stockPrice = ((Number) lastClose.get(stock)).doubleValue();
@@ -135,13 +131,10 @@ public class PortfolioActivity extends AppCompatActivity {
             double stockValue = shares * stockPrice;
             totalValue += stockValue;
             holdingsText.append(stock).append(": ").append(shares).append(" shares @ $")
-                    .append(stockPrice).append(" each (:$").append(String.format("%.2f", stockValue)).append(")\n");
+                    .append(String.format("%.2f", stockPrice)).append(" each ($").append(String.format("%.2f", stockValue)).append(")\n");
         }
 
         holdingsView.setText("Holdings:\n" + holdingsText.toString());
         totalValueView.setText(String.format("Total Portfolio Value: $%.2f", totalValue));
     }
-
-
-
 }

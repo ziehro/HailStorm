@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".PortfolioFragment">
+
+    <TextView
+        android:id="@+id/capital"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Capital will be displayed here"
+        android:textSize="16sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/holdings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Holdings will be displayed here"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/totalValue"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Total value will be displayed here"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/fetchPortfolioButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Fetch Portfolio" />
+
+    <TextView
+        android:id="@+id/predictionsView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Predictions will be displayed here"
+        android:textSize="16sp"
+        android:layout_marginTop="16dp"/>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+</LinearLayout>

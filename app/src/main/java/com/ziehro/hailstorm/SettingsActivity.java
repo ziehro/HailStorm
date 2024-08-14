@@ -10,12 +10,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.gms.auth.api.signin.internal.Storage;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Collections;
 
 public class SettingsActivity extends AppCompatActivity {
@@ -30,7 +27,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         frequencyInput = findViewById(R.id.frequencyInput);
         Button updateFrequencyButton = findViewById(R.id.updateFrequencyButton);
-        Button uploadModelButton = findViewById(R.id.uploadModelButton);
+        Button uploadModelButton = findViewById(R.id.resetControlButton);
         progressBar = findViewById(R.id.progressBar);
 
         updateFrequencyButton.setOnClickListener(v -> updateFrequency());
