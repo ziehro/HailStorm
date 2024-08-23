@@ -14,7 +14,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +29,9 @@ public class MainActivity extends AppCompatActivity {
     private TextView portfolio0TotalValue;
     private TextView portfolio1TotalValue, portfolio2TotalValue, portfolio3TotalValue, portfolio4TotalValue, portfolio5TotalValue, portfolio6TotalValue, controlPortfolioTotalValue;
     private Button updateFrequencyButton, resetControlPortfolio, fetchPortfolioButton, openPortfolioActivityButton, openPortfolioAllButton;
+    private TextView portfolio0Accuracy;
+    private TextView portfolio1Accuracy, portfolio2Accuracy, portfolio3Accuracy, portfolio4Accuracy, portfolio5Accuracy, portfolio6Accuracy;
+
 
     private double initialCapital = 10000.0;
     private double controlTotalValue = 0.0;
@@ -53,6 +58,14 @@ public class MainActivity extends AppCompatActivity {
         portfolio5TotalValue = findViewById(R.id.portfolio5TotalValue);
         portfolio6TotalValue = findViewById(R.id.portfolio6TotalValue);
         controlPortfolioTotalValue = findViewById(R.id.controlPortfolioTotalValue);
+
+        portfolio0Accuracy = findViewById(R.id.portfolio0Accuracy);
+        portfolio1Accuracy = findViewById(R.id.portfolio1Accuracy);
+        portfolio2Accuracy = findViewById(R.id.portfolio2Accuracy);
+        portfolio3Accuracy = findViewById(R.id.portfolio3Accuracy);
+        portfolio4Accuracy = findViewById(R.id.portfolio4Accuracy);
+        portfolio5Accuracy = findViewById(R.id.portfolio5Accuracy);
+        portfolio6Accuracy = findViewById(R.id.portfolio6Accuracy);
 
         updateFrequencyButton = findViewById(R.id.updateFrequencyButton);
         resetControlPortfolio = findViewById(R.id.resetControlButton);
@@ -96,6 +109,7 @@ public class MainActivity extends AppCompatActivity {
                         // Once all portfolios are processed, apply the color gradient
                         if (portfolioValues.size() == portfolioIds.length) {
                             applyColorGradient(portfolioValues);
+                            fetchAllPortfoliosAccuracy(); // Fetch and display accuracy data
                         }
                     })
                     .addOnFailureListener(e -> {
@@ -104,6 +118,51 @@ public class MainActivity extends AppCompatActivity {
                     });
         }
     }
+
+    private void fetchAllPortfoliosAccuracy() {
+        String[] portfolioIds = {"portfolio1", "portfolio2", "portfolio3", "portfolio4", "portfolio5", "portfolio6", "portfolio0"};
+
+        for (String portfolioId : portfolioIds) {
+            db.collection("cumulative_accuracies").document(portfolioId)
+                    .get()
+                    .addOnSuccessListener(documentSnapshot -> {
+                        if (documentSnapshot.exists()) {
+                            Double accuracy = documentSnapshot.getDouble("accuracy");
+                            String accuracyText = String.format("%.2f%%", (accuracy != null) ? accuracy : 0.0);
+
+                            switch (portfolioId) {
+                                case "portfolio1":
+                                    portfolio1Accuracy.setText(accuracyText);
+                                    break;
+                                case "portfolio2":
+                                    portfolio2Accuracy.setText(accuracyText);
+                                    break;
+                                case "portfolio3":
+                                    portfolio3Accuracy.setText(accuracyText);
+                                    break;
+                                case "portfolio4":
+                                    portfolio4Accuracy.setText(accuracyText);
+                                    break;
+                                case "portfolio5":
+                                    portfolio5Accuracy.setText(accuracyText);
+                                    break;
+                                case "portfolio6":
+                                    portfolio6Accuracy.setText(accuracyText);
+                                    break;
+                                case "portfolio0":
+                                    portfolio0Accuracy.setText(accuracyText);
+                                    break;
+                            }
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.w("TAG", "Error fetching cumulative accuracy data for " + portfolioId, e);
+                        Toast.makeText(MainActivity.this, "Error fetching cumulative accuracy data", Toast.LENGTH_SHORT).show();
+                    });
+        }
+    }
+
+
 
     private double calculateTotalValue(DocumentSnapshot documentSnapshot) {
         if (documentSnapshot.exists()) {
@@ -334,16 +393,22 @@ public class MainActivity extends AppCompatActivity {
         defaultPortfolio.put("capital", initialCapital);
         defaultPortfolio.put("holdings", new HashMap<>());
 
+        String portfolioId = "portfolio0"; // Replace with the actual portfolio ID
+
         db.collection("portfolio").document("latest")
                 .set(defaultPortfolio)
-                .addOnSuccessListener(aVoid -> Toast.makeText(MainActivity.this, "Portfolio reset successfully", Toast.LENGTH_SHORT).show())
+                .addOnSuccessListener(aVoid -> {
+                    // Reset accuracies for this portfolio
+                    resetAccuracies(portfolioId);
+                    Toast.makeText(MainActivity.this, "Portfolio reset successfully", Toast.LENGTH_SHORT).show();
+                })
                 .addOnFailureListener(e -> Toast.makeText(MainActivity.this, "Error resetting portfolio", Toast.LENGTH_SHORT).show());
 
         fetchPortfolio();
     }
 
-    public void resetAllPortfolios(View view) {
 
+    public void resetAllPortfolios(View view) {
         Map<String, Object> defaultPortfolio = new HashMap<>();
         defaultPortfolio.put("capital", initialCapital);
         defaultPortfolio.put("holdings", new HashMap<>());
@@ -353,11 +418,50 @@ public class MainActivity extends AppCompatActivity {
         for (String portfolio : portfolios) {
             db.collection(portfolio).document("latest")
                     .set(defaultPortfolio)
+                    .addOnSuccessListener(aVoid -> {
+                        // Reset accuracies for this portfolio
+                        resetAccuracies(portfolio);
+                    })
                     .addOnFailureListener(e -> Toast.makeText(MainActivity.this, "Error resetting " + portfolio, Toast.LENGTH_SHORT).show());
         }
 
         fetchPortfolio();
     }
+
+    private void resetAccuracies(String portfolioId) {
+        // Reset all documents in the 'tickers' subcollection under the portfolio's 'accuracies' document to zero accuracy
+        db.collection("accuracies").document(portfolioId).collection("tickers")
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            Map<String, Object> resetAccuracy = new HashMap<>();
+                            resetAccuracy.put("accuracy", 0);
+                            resetAccuracy.put("timestamp", LocalDateTime.now().toString()); // Update the timestamp
+
+                            db.collection("accuracies").document(portfolioId).collection("tickers").document(document.getId())
+                                    .set(resetAccuracy)
+                                    .addOnSuccessListener(aVoid -> Log.d("ResetAccuracies", "Successfully reset accuracy document: " + document.getId()))
+                                    .addOnFailureListener(e -> Log.w("ResetAccuracies", "Error resetting accuracy document: " + document.getId(), e));
+                        }
+                    } else {
+                        Log.w("ResetAccuracies", "Error getting accuracy documents: ", task.getException());
+                    }
+                });
+
+        // Optionally, reset cumulative accuracies as well
+        Map<String, Object> resetCumulativeAccuracy = new HashMap<>();
+        resetCumulativeAccuracy.put("correct_predictions", 0);
+        resetCumulativeAccuracy.put("total_predictions", 0);
+        resetCumulativeAccuracy.put("accuracy", 0);
+
+        db.collection("cumulative_accuracies").document(portfolioId)
+                .set(resetCumulativeAccuracy)
+                .addOnSuccessListener(aVoid -> Log.d("ResetAccuracies", "Successfully reset cumulative accuracy for: " + portfolioId))
+                .addOnFailureListener(e -> Log.w("ResetAccuracies", "Error resetting cumulative accuracy for: " + portfolioId, e));
+    }
+
+
 
     public void createControlPortfolio(View view) {
         db.collection("portfolio1").document("latest")

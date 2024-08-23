@@ -31,8 +31,7 @@
         android:padding="16dp"
         android:text="Control Portfolio Total Value: $0.00" />
 
-
-
+    <!-- Portfolio 0 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -44,16 +43,24 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_marginRight="8dp"
-            android:background="#D3D3D3" /> <!-- Default color -->
+            android:background="#D3D3D3" />
         <TextView
             android:id="@+id/portfolio0TotalValue"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:textStyle="bold"
             android:text="Portfolio 0 Total Value: $0.00"
             android:textSize="16sp" />
+        <TextView
+            android:id="@+id/portfolio0Accuracy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Accuracy:"
+            android:textSize="16sp" />
     </LinearLayout>
 
+    <!-- Portfolio 1 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -65,17 +72,24 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_marginRight="8dp"
-            android:background="#D3D3D3" /> <!-- Default color -->
-
+            android:background="#D3D3D3" />
         <TextView
             android:id="@+id/portfolio1TotalValue"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="Portfolio 1 Total Value: $0.00"
             android:textSize="16sp"
             android:textStyle="bold" />
+        <TextView
+            android:id="@+id/portfolio1Accuracy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Accuracy: 0%"
+            android:textSize="16sp" />
     </LinearLayout>
 
+    <!-- Portfolio 2 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -87,17 +101,24 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_marginRight="8dp"
-            android:background="#D3D3D3" /> <!-- Default color -->
-
+            android:background="#D3D3D3" />
         <TextView
             android:id="@+id/portfolio2TotalValue"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="Portfolio 2 Total Value: $0.00"
             android:textSize="16sp"
             android:textStyle="bold" />
+        <TextView
+            android:id="@+id/portfolio2Accuracy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Accuracy: 0%"
+            android:textSize="16sp" />
     </LinearLayout>
 
+    <!-- Portfolio 3 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -109,17 +130,24 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_marginRight="8dp"
-            android:background="#D3D3D3" /> <!-- Default color -->
-
+            android:background="#D3D3D3" />
         <TextView
             android:id="@+id/portfolio3TotalValue"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="Portfolio 3 Total Value: $0.00"
             android:textSize="16sp"
             android:textStyle="bold" />
+        <TextView
+            android:id="@+id/portfolio3Accuracy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Accuracy: 0%"
+            android:textSize="16sp" />
     </LinearLayout>
 
+    <!-- Portfolio 4 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -131,17 +159,24 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_marginRight="8dp"
-            android:background="#D3D3D3" /> <!-- Default color -->
-
+            android:background="#D3D3D3" />
         <TextView
             android:id="@+id/portfolio4TotalValue"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="Portfolio 4 Total Value: $0.00"
             android:textSize="16sp"
             android:textStyle="bold" />
+        <TextView
+            android:id="@+id/portfolio4Accuracy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Accuracy: 0%"
+            android:textSize="16sp" />
     </LinearLayout>
 
+    <!-- Portfolio 5 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -153,17 +188,24 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_marginRight="8dp"
-            android:background="#D3D3D3" /> <!-- Default color -->
-
+            android:background="#D3D3D3" />
         <TextView
             android:id="@+id/portfolio5TotalValue"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="Portfolio 5 Total Value: $0.00"
             android:textSize="16sp"
             android:textStyle="bold" />
+        <TextView
+            android:id="@+id/portfolio5Accuracy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Accuracy: 0%"
+            android:textSize="16sp" />
     </LinearLayout>
 
+    <!-- Portfolio 6 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -175,16 +217,24 @@
             android:layout_width="20dp"
             android:layout_height="20dp"
             android:layout_marginRight="8dp"
-            android:background="#D3D3D3" /> <!-- Default color -->
-
+            android:background="#D3D3D3" />
         <TextView
             android:id="@+id/portfolio6TotalValue"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="Portfolio 6 Total Value: $0.00"
             android:textSize="16sp"
             android:textStyle="bold" />
+        <TextView
+            android:id="@+id/portfolio6Accuracy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Accuracy: 0%"
+            android:textSize="16sp" />
     </LinearLayout>
+
+
 
     <Button
         android:id="@+id/resetControlButton"
