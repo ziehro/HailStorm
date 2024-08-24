@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView portfolio1Accuracy, portfolio2Accuracy, portfolio3Accuracy, portfolio4Accuracy, portfolio5Accuracy, portfolio6Accuracy;
 
 
-    private double initialCapital = 10000.0;
+    //private double initialCapital = 10000.0;
     private double controlTotalValue = 0.0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
