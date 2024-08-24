@@ -234,6 +234,35 @@
             android:textSize="16sp" />
     </LinearLayout>
 
+    <!-- Portfolio Super -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <View
+            android:id="@+id/portfolioSuperColorBox"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginRight="8dp"
+            android:background="#D3D3D3" />
+        <TextView
+            android:id="@+id/portfolioSuperTotalValue"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Portfolio S Total Value: $0.00"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/portfolioSuperAccuracy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Accuracy: 0%"
+            android:textSize="16sp" />
+    </LinearLayout>
+
 
 
     <Button
