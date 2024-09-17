@@ -15,6 +15,7 @@ import android.widget.Toast;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.SetOptions;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -27,13 +28,13 @@ public class MainActivity extends AppCompatActivity {
     private EditText frequencyInput;
     private ProgressBar progressBar;
     private TextView portfolio0TotalValue;
-    private TextView portfolio1TotalValue, portfolio2TotalValue, portfolio3TotalValue, portfolio4TotalValue, portfolio5TotalValue, portfolio6TotalValue, controlPortfolioTotalValue, portfolioSuperTotalValue;
+    private TextView portfolio1TotalValue, portfolio2TotalValue, portfolio3TotalValue, portfolio4TotalValue, portfolio5TotalValue, portfolio6TotalValue, controlPortfolioTotalValue, portfolio7TotalValue;
     private Button updateFrequencyButton, resetControlPortfolio, fetchPortfolioButton, openPortfolioActivityButton, openPortfolioAllButton;
     private TextView portfolio0Accuracy;
-    private TextView portfolio1Accuracy, portfolio2Accuracy, portfolio3Accuracy, portfolio4Accuracy, portfolio5Accuracy, portfolio6Accuracy, portfolioSuperAccuracy;
+    private TextView portfolio1Accuracy, portfolio2Accuracy, portfolio3Accuracy, portfolio4Accuracy, portfolio5Accuracy, portfolio6Accuracy, portfolio7Accuracy;
 
 
-    private double initialCapital = 10000.0;
+    private double initialCapital = 100000.0;
     private double controlTotalValue = 0.0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
         portfolio4TotalValue = findViewById(R.id.portfolio4TotalValue);
         portfolio5TotalValue = findViewById(R.id.portfolio5TotalValue);
         portfolio6TotalValue = findViewById(R.id.portfolio6TotalValue);
-        portfolioSuperTotalValue = findViewById(R.id.portfolioSuperTotalValue);
+        portfolio7TotalValue = findViewById(R.id.portfolio7TotalValue);
         controlPortfolioTotalValue = findViewById(R.id.controlPortfolioTotalValue);
 
         portfolio0Accuracy = findViewById(R.id.portfolio0Accuracy);
@@ -67,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
         portfolio4Accuracy = findViewById(R.id.portfolio4Accuracy);
         portfolio5Accuracy = findViewById(R.id.portfolio5Accuracy);
         portfolio6Accuracy = findViewById(R.id.portfolio6Accuracy);
-        portfolioSuperAccuracy = findViewById(R.id.portfolioSuperAccuracy);
+        portfolio7Accuracy = findViewById(R.id.portfolio7Accuracy);
 
         updateFrequencyButton = findViewById(R.id.updateFrequencyButton);
         resetControlPortfolio = findViewById(R.id.resetControlButton);
@@ -98,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void fetchAllPortfoliosTotalValue() {
-        String[] portfolioIds = {"portfolio1", "portfolio2", "portfolio3", "portfolio4", "portfolio5", "portfolio6", "portfolio", "super_portfolio"};
+        String[] portfolioIds = {"portfolio1", "portfolio2", "portfolio3", "portfolio4", "portfolio5", "portfolio6", "portfolio", "portfolio7"};
         Map<String, Double> portfolioValues = new HashMap<>();
 
         for (String portfolioId : portfolioIds) {
@@ -122,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void fetchAllPortfoliosAccuracy() {
-        String[] portfolioIds = {"portfolio1", "portfolio2", "portfolio3", "portfolio4", "portfolio5", "portfolio6", "portfolio0", "super_portfolio"};
+        String[] portfolioIds = {"portfolio1", "portfolio2", "portfolio3", "portfolio4", "portfolio5", "portfolio6", "portfolio0", "portfolio7"};
 
         for (String portfolioId : portfolioIds) {
             db.collection("cumulative_accuracies").document(portfolioId)
@@ -154,8 +155,8 @@ public class MainActivity extends AppCompatActivity {
                                 case "portfolio0":
                                     portfolio0Accuracy.setText(accuracyText);
                                     break;
-                                case "super_portfolio":
-                                    portfolioSuperAccuracy.setText(accuracyText);
+                                case "portfolio7":
+                                    portfolio7Accuracy.setText(accuracyText);
                                     break;
                             }
                         }
@@ -216,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             // Update the portfolio's total value text
-            String displayPortfolioId = portfolioId.equals("super_portfolio") ? "S" : portfolioId.replace("portfolio", "");
+            String displayPortfolioId = portfolioId.equals("portfolio7") ? "7" : portfolioId.replace("portfolio", "");
             String totalValueText = String.format("Portfolio %s Total Value: $%.2f", displayPortfolioId, value);
 
             TextView portfolioValueTextView = findViewById(getPortfolioTextViewId(portfolioId));
@@ -241,10 +242,10 @@ public class MainActivity extends AppCompatActivity {
                 return R.id.portfolio5ColorBox;
             case "portfolio6":
                 return R.id.portfolio6ColorBox;
-            case "portfolio":
+            case "portfolio0":
                 return R.id.portfolio0ColorBox;
-            case "super_portfolio":
-                return R.id.portfolioSuperColorBox;
+            case "portfolio7":
+                return R.id.portfolio7ColorBox;
             default:
                 return 0;
         }
@@ -266,8 +267,8 @@ public class MainActivity extends AppCompatActivity {
                 return R.id.portfolio6TotalValue;
             case "portfolio":
                 return R.id.portfolio0TotalValue;
-            case "super_portfolio":
-                return R.id.portfolioSuperTotalValue;
+            case "portfolio7":
+                return R.id.portfolio7TotalValue;
             default:
                 return 0;
         }
@@ -317,8 +318,8 @@ public class MainActivity extends AppCompatActivity {
             case "portfolio6":
                 portfolio6TotalValue.setText(totalValueText);
                 break;
-            case "super_portfolio":
-                portfolioSuperTotalValue.setText(totalValueText);
+            case "portfolio7":
+                portfolio7TotalValue.setText(totalValueText);
                 break;
             case "Control":
                 controlPortfolioTotalValue.setText(totalValueText);
@@ -361,7 +362,7 @@ public class MainActivity extends AppCompatActivity {
         fetchAllPortfoliosTotalValue();  // This will fetch and update all portfolios' total values
         updateControlPortfolioValue(getCurrentFocus());  // Update control portfolio value
 
-        db.collection("portfolio").document("latest")
+        db.collection("portfolio0").document("latest")
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
@@ -409,7 +410,7 @@ public class MainActivity extends AppCompatActivity {
 
         String portfolioId = "portfolio0"; // Replace with the actual portfolio ID
 
-        db.collection("portfolio").document("latest")
+        db.collection("portfolio0").document("latest")
                 .set(defaultPortfolio)
                 .addOnSuccessListener(aVoid -> {
                     // Reset accuracies for this portfolio
@@ -427,11 +428,11 @@ public class MainActivity extends AppCompatActivity {
         defaultPortfolio.put("capital", initialCapital);
         defaultPortfolio.put("holdings", new HashMap<>());
 
-        String[] portfolios = {"portfolio1", "portfolio2", "portfolio3", "portfolio4", "portfolio5", "portfolio6", "super_portfolio"};
+        String[] portfolios = {"portfolio1", "portfolio2", "portfolio3", "portfolio4", "portfolio5", "portfolio6", "portfolio7"};
 
         for (String portfolio : portfolios) {
             db.collection(portfolio).document("latest")
-                    .set(defaultPortfolio)
+                    .set(defaultPortfolio, SetOptions.merge())
                     .addOnSuccessListener(aVoid -> {
                         // Reset accuracies for this portfolio
                         resetAccuracies(portfolio);
@@ -441,6 +442,7 @@ public class MainActivity extends AppCompatActivity {
 
         fetchPortfolio();
     }
+
 
     private void resetAccuracies(String portfolioId) {
         // Reset all documents in the 'tickers' subcollection under the portfolio's 'accuracies' document to zero accuracy
@@ -500,7 +502,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupControlPortfolio(Map<String, Object> lastClose) {
-        String[] tickers = {"AAPL", "MSFT", "GOOG", "AMZN", "META"};
+        String[] tickers = {"GOOG"};
 
         double investmentPerStock = initialCapital / tickers.length;
 
