@@ -12,15 +12,32 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.SetOptions;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.ziehro.hailstorm.BuildConfig;
+import com.ziehro.hailstorm.PortfolioActivity;
+import com.ziehro.hailstorm.PortfolioActivityAll;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,13 +46,17 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private TextView portfolio0TotalValue;
     private TextView portfolio1TotalValue, portfolio2TotalValue, portfolio3TotalValue, portfolio4TotalValue, portfolio5TotalValue, portfolio6TotalValue, controlPortfolioTotalValue, portfolio7TotalValue;
-    private Button updateFrequencyButton, resetControlPortfolio, fetchPortfolioButton, openPortfolioActivityButton, openPortfolioAllButton;
+    private Button updateFrequencyButton, resetControlPortfolio, fetchPortfolioButton, dailyPerformanceBtn, openPortfolioAllButton;
     private TextView portfolio0Accuracy;
     private TextView portfolio1Accuracy, portfolio2Accuracy, portfolio3Accuracy, portfolio4Accuracy, portfolio5Accuracy, portfolio6Accuracy, portfolio7Accuracy;
 
 
+    private OkHttpClient client = new OkHttpClient();
+    private Gson gson = new Gson();
+
     private double initialCapital = 100000.0;
     private double controlTotalValue = 0.0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,8 +64,12 @@ public class MainActivity extends AppCompatActivity {
 
         initViews();
         initListeners();
-        fetchAllPortfoliosTotalValue();
+        fetchPortfolio();
+        // Removed redundant fetchAllPortfoliosTotalValue call
     }
+
+    String API_KEY_ID = BuildConfig.ALPACA_API_KEY_ID;
+    String SECRET_KEY = BuildConfig.ALPACA_SECRET_KEY;
 
     private void initViews() {
         db = FirebaseFirestore.getInstance();
@@ -73,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
         updateFrequencyButton = findViewById(R.id.updateFrequencyButton);
         resetControlPortfolio = findViewById(R.id.resetControlButton);
         fetchPortfolioButton = findViewById(R.id.fetchPortfolioButton);
-        openPortfolioActivityButton = findViewById(R.id.openPortfolioActivityButton);
+        dailyPerformanceBtn = findViewById(R.id.dailyPerformaceBtn);
         openPortfolioAllButton = findViewById(R.id.openPortfolioAllActivityButton);
     }
 
@@ -81,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
         updateFrequencyButton.setOnClickListener(v -> updateFrequency());
         resetControlPortfolio.setOnClickListener(v -> createControlPortfolio(getCurrentFocus()));
         fetchPortfolioButton.setOnClickListener(v -> fetchPortfolio());
-        openPortfolioActivityButton.setOnClickListener(v -> openPortfolioActivity());
+        dailyPerformanceBtn.setOnClickListener(v -> openPortfolioActivity());
         openPortfolioAllButton.setOnClickListener(v -> openPortfolioAllActivity());
 
         // Add confirmation dialogs for the reset buttons
@@ -99,31 +124,62 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void fetchAllPortfoliosTotalValue() {
-        String[] portfolioIds = {"portfolio1", "portfolio2", "portfolio3", "portfolio4", "portfolio5", "portfolio6", "portfolio", "portfolio7"};
+        String[] portfolioIds = {
+                "portfolio1", "portfolio2", "portfolio3",
+                "portfolio4", "portfolio5", "portfolio6", "portfolio7"
+        };
         Map<String, Double> portfolioValues = new HashMap<>();
 
+        List<Task<DocumentSnapshot>> tasks = new ArrayList<>();
+
         for (String portfolioId : portfolioIds) {
-            db.collection(portfolioId).document("latest")
-                    .get()
-                    .addOnSuccessListener(documentSnapshot -> {
+            DocumentReference docRef = db.collection(portfolioId).document("latest");
+            tasks.add(docRef.get());
+            Log.d("DebugFetch", "Added task for " + portfolioId);
+
+        }
+
+        Tasks.whenAllSuccess(tasks)
+                .addOnSuccessListener(results -> {
+                    Log.d("DebugFetch", "Tasks.whenAllSuccess onSuccessListener triggered.");
+
+                    for (int i = 0; i < results.size(); i++) {
+                        DocumentSnapshot documentSnapshot = (DocumentSnapshot) results.get(i);
+                        String portfolioId = portfolioIds[i];
                         double totalValue = calculateTotalValue(documentSnapshot);
                         portfolioValues.put(portfolioId, totalValue);
 
-                        // Once all portfolios are processed, apply the color gradient
-                        if (portfolioValues.size() == portfolioIds.length) {
-                            applyColorGradient(portfolioValues);
-                            fetchAllPortfoliosAccuracy(); // Fetch and display accuracy data
-                        }
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.w("TAG", "Error fetching portfolio data for " + portfolioId, e);
-                        Toast.makeText(MainActivity.this, "Error fetching portfolio data", Toast.LENGTH_SHORT).show();
-                    });
-        }
+                        // Update the portfolio's total value in the UI
+                        String totalValueText = String.format(
+                                "Portfoliosss %s Total Value: $%.2f",
+                                portfolioId.replace("portfolio", ""), totalValue
+                        );
+                        updatePortfolioTextView(portfolioId, totalValueText);
+                    }
+
+                    // Once all portfolios are processed, apply the color gradient
+                    fetchAllPortfoliosAccuracy(); // Fetch and display accuracy data
+                    applyColorGradient(portfolioValues);
+
+                    // Hide the progress bar after all operations are complete
+                    progressBar.setVisibility(View.GONE);
+                })
+                .addOnFailureListener(e -> {
+                    Log.w("TAG", "Error fetching portfolio data", e);
+                    Toast.makeText(
+                            MainActivity.this,
+                            "Error fetching portfolio data",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                    progressBar.setVisibility(View.GONE);
+                });
     }
 
     private void fetchAllPortfoliosAccuracy() {
-        String[] portfolioIds = {"portfolio1", "portfolio2", "portfolio3", "portfolio4", "portfolio5", "portfolio6", "portfolio0", "portfolio7"};
+        String[] portfolioIds = {
+                "portfolio1", "portfolio2", "portfolio3",
+                "portfolio4", "portfolio5", "portfolio6", "portfolio7"
+        };
 
         for (String portfolioId : portfolioIds) {
             db.collection("cumulative_accuracies").document(portfolioId)
@@ -152,9 +208,6 @@ public class MainActivity extends AppCompatActivity {
                                 case "portfolio6":
                                     portfolio6Accuracy.setText(accuracyText);
                                     break;
-                                case "portfolio0":
-                                    portfolio0Accuracy.setText(accuracyText);
-                                    break;
                                 case "portfolio7":
                                     portfolio7Accuracy.setText(accuracyText);
                                     break;
@@ -167,8 +220,6 @@ public class MainActivity extends AppCompatActivity {
                     });
         }
     }
-
-
 
     private double calculateTotalValue(DocumentSnapshot documentSnapshot) {
         if (documentSnapshot.exists()) {
@@ -192,8 +243,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void applyColorGradient(Map<String, Double> portfolioValues) {
+        if (portfolioValues.isEmpty()) return;
+
         double maxValue = Collections.max(portfolioValues.values());
         double minValue = Collections.min(portfolioValues.values());
+
+        // Avoid division by zero
+        double range = maxValue - minValue;
+        if (range == 0) range = 1;
 
         for (Map.Entry<String, Double> entry : portfolioValues.entrySet()) {
             String portfolioId = entry.getKey();
@@ -201,11 +258,12 @@ public class MainActivity extends AppCompatActivity {
 
             int color;
             if (value < controlTotalValue) {
-                // Set color to red if the portfolio value is below $10,000
+                // Set color to red if the portfolio value is below the control total value
                 color = Color.rgb(255, 0, 0);
             } else {
                 // Calculate color intensity based on the portfolio's value relative to the min/max
-                float intensity = (float) ((value - minValue) / (maxValue - minValue));
+                float intensity = (float) ((value - minValue) / range);
+                intensity = Math.min(Math.max(intensity, 0f), 1f); // Clamp between 0 and 1
                 int green = (int) (255 * intensity);
                 color = Color.rgb(0, green, 0);
             }
@@ -217,7 +275,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             // Update the portfolio's total value text
-            String displayPortfolioId = portfolioId.equals("portfolio7") ? "7" : portfolioId.replace("portfolio", "");
+            String displayPortfolioId = portfolioId.replace("portfolio", "");
             String totalValueText = String.format("Portfolio %s Total Value: $%.2f", displayPortfolioId, value);
 
             TextView portfolioValueTextView = findViewById(getPortfolioTextViewId(portfolioId));
@@ -226,7 +284,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
 
     private int getColorBoxId(String portfolioId) {
         switch (portfolioId) {
@@ -242,8 +299,6 @@ public class MainActivity extends AppCompatActivity {
                 return R.id.portfolio5ColorBox;
             case "portfolio6":
                 return R.id.portfolio6ColorBox;
-            case "portfolio0":
-                return R.id.portfolio0ColorBox;
             case "portfolio7":
                 return R.id.portfolio7ColorBox;
             default:
@@ -265,8 +320,6 @@ public class MainActivity extends AppCompatActivity {
                 return R.id.portfolio5TotalValue;
             case "portfolio6":
                 return R.id.portfolio6TotalValue;
-            case "portfolio":
-                return R.id.portfolio0TotalValue;
             case "portfolio7":
                 return R.id.portfolio7TotalValue;
             default:
@@ -274,28 +327,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     private void updatePortfolioTotalValue(String portfolioId, DocumentSnapshot documentSnapshot) {
-        if (documentSnapshot.exists()) {
-            Double capital = documentSnapshot.getDouble("capital");
-            Map<String, Object> holdings = (Map<String, Object>) documentSnapshot.get("holdings");
-            Map<String, Object> lastClose = (Map<String, Object>) documentSnapshot.get("lastClose");
-
-            double totalValue = (capital != null) ? capital : 0.0;
-
-            if (holdings != null && lastClose != null) {
-                for (String stock : holdings.keySet()) {
-                    Double shares = (holdings.get(stock) instanceof Number) ? ((Number) holdings.get(stock)).doubleValue() : 0.0;
-                    Double stockPrice = (lastClose.get(stock) instanceof Number) ? ((Number) lastClose.get(stock)).doubleValue() : 0.0;
-                    totalValue += shares * stockPrice;
-                }
-            }
-
-            String totalValueText = String.format("Portfolio %s Total Value: $%.2f", portfolioId.replace("portfolio", ""), totalValue);
-            updatePortfolioTextView(portfolioId, totalValueText);
-        } else {
-            Log.d("TAG", "No data found for " + portfolioId);
-        }
+        // Removed as it's no longer needed
     }
 
     private void updatePortfolioTextView(String portfolioId, String totalValueText) {
@@ -359,24 +392,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void fetchPortfolio() {
         progressBar.setVisibility(View.VISIBLE);
-        fetchAllPortfoliosTotalValue();  // This will fetch and update all portfolios' total values
-        updateControlPortfolioValue(getCurrentFocus());  // Update control portfolio value
-
-        db.collection("portfolio0").document("latest")
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        displayTotalPortfolioValue(documentSnapshot);
-                    } else {
-                        Log.d("TAG", "No portfolio data found");
-                        portfolio0TotalValue.setText("No portfolio data found");
-                    }
-                    progressBar.setVisibility(View.GONE);
-                })
-                .addOnFailureListener(e -> {
-                    Log.w("TAG", "Error fetching portfolio", e);
-                    progressBar.setVisibility(View.GONE);
-                });
+        fetchAlpacaAccount();
+        updateControlPortfolioValue(getCurrentFocus());
+        fetchAllPortfoliosTotalValue();
     }
 
     private void displayTotalPortfolioValue(DocumentSnapshot documentSnapshot) {
@@ -396,12 +414,11 @@ public class MainActivity extends AppCompatActivity {
             }
 
             String totalValueText = String.format("Portfolio 0 Total Value: $%.2f", totalValue);
-            portfolio0TotalValue.setText(totalValueText);
+            //portfolio0TotalValue.setText(totalValueText);
         } else {
             Log.d("TAG", "No data found for portfolio");
         }
     }
-
 
     public void resetPortfolio(View view) {
         Map<String, Object> defaultPortfolio = new HashMap<>();
@@ -422,13 +439,15 @@ public class MainActivity extends AppCompatActivity {
         fetchPortfolio();
     }
 
-
     public void resetAllPortfolios(View view) {
         Map<String, Object> defaultPortfolio = new HashMap<>();
         defaultPortfolio.put("capital", initialCapital);
         defaultPortfolio.put("holdings", new HashMap<>());
 
-        String[] portfolios = {"portfolio1", "portfolio2", "portfolio3", "portfolio4", "portfolio5", "portfolio6", "portfolio7"};
+        String[] portfolios = {
+                "portfolio1", "portfolio2", "portfolio3",
+                "portfolio4", "portfolio5", "portfolio6", "portfolio7"
+        };
 
         for (String portfolio : portfolios) {
             db.collection(portfolio).document("latest")
@@ -442,7 +461,6 @@ public class MainActivity extends AppCompatActivity {
 
         fetchPortfolio();
     }
-
 
     private void resetAccuracies(String portfolioId) {
         // Reset all documents in the 'tickers' subcollection under the portfolio's 'accuracies' document to zero accuracy
@@ -476,8 +494,6 @@ public class MainActivity extends AppCompatActivity {
                 .addOnSuccessListener(aVoid -> Log.d("ResetAccuracies", "Successfully reset cumulative accuracy for: " + portfolioId))
                 .addOnFailureListener(e -> Log.w("ResetAccuracies", "Error resetting cumulative accuracy for: " + portfolioId, e));
     }
-
-
 
     public void createControlPortfolio(View view) {
         db.collection("portfolio1").document("latest")
@@ -555,7 +571,6 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "Error fetching last close prices from portfolio1", Toast.LENGTH_SHORT).show();
                     Log.e("TAG", "Error fetching last close prices from portfolio1", e);
                 });
-
     }
 
     private void updateControlPortfolio(Map<String, Object> lastClose) {
@@ -602,5 +617,51 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "Error fetching control portfolio", Toast.LENGTH_SHORT).show();
                     Log.e("TAG", "Error fetching control portfolio", e);
                 });
+    }
+
+    private void fetchAlpacaAccount() {
+
+        String url = "https://paper-api.alpaca.markets/v2/account";
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("APCA-API-KEY-ID", API_KEY_ID)
+                .addHeader("APCA-API-SECRET-KEY", SECRET_KEY)
+                .get()
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Handle request failure
+                runOnUiThread(() -> {
+                    Toast.makeText(MainActivity.this, "Failed to fetch Alpaca account", Toast.LENGTH_SHORT).show();
+                    progressBar.setVisibility(View.GONE);
+                });
+                Log.e("AlpacaAPI", "Error fetching account: ", e);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    String responseBody = response.body().string();
+                    JsonObject account = gson.fromJson(responseBody, JsonObject.class);
+                    double equity = account.get("equity").getAsDouble();
+
+                    runOnUiThread(() -> {
+                        portfolio0TotalValue.setText(String.format("Alpaca Total Value: $%.2f", equity));
+                        portfolio0TotalValue.setTextColor(Color.YELLOW); // Set text color to yellow
+
+                        progressBar.setVisibility(View.GONE);
+                    });
+                } else {
+                    runOnUiThread(() -> {
+                        Toast.makeText(MainActivity.this, "Failed to fetch Alpaca account", Toast.LENGTH_SHORT).show();
+                        progressBar.setVisibility(View.GONE);
+                    });
+                    Log.e("AlpacaAPI", "Unsuccessful response: " + response.code());
+                }
+            }
+        });
     }
 }

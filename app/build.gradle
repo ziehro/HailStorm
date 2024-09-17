@@ -6,6 +6,10 @@ android {
     namespace 'com.ziehro.hailstorm'
     compileSdk 34
 
+    buildFeatures {
+        buildConfig true
+    }
+
     defaultConfig {
         applicationId "com.ziehro.hailstorm"
         minSdk 34
@@ -14,6 +18,10 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField "String", "ALPACA_API_KEY_ID", "\"PKBI8IH6I4M8Z3GA4CX6\""
+        buildConfigField "String", "ALPACA_SECRET_KEY", "\"Kn4vpbgIrA99bQmuc40o7ENvT4ymG9NiJFB7nszU\""
+
     }
 
     buildTypes {
@@ -34,6 +42,12 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+    // OkHttp for HTTP requests
+    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
+
+    // Gson for JSON parsing
+    implementation 'com.google.code.gson:gson:2.8.9'
 
     // Firebase dependencies
     implementation 'com.google.firebase:firebase-firestore:25.0.0'

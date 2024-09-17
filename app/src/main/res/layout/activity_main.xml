@@ -1,28 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <EditText
-        android:id="@+id/frequencyInput"
+    <ImageView
+        android:id="@+id/imageView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Enter update frequency or type &quot;sell all&quot; " />
-
-    <Button
-        android:id="@+id/updateFrequencyButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Update Frequency" />
-
-    <Button
-        android:id="@+id/fetchPortfolioButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Fetch Portfolio" />
+        android:layout_height="120dp"
+        app:srcCompat="@drawable/iconimage" />
 
     <TextView
         android:id="@+id/controlPortfolioTotalValue"
@@ -265,28 +254,40 @@
     </LinearLayout>
 
 
-
-    <Button
-        android:id="@+id/resetControlButton"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Reset Control Portfolio" />
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Reset" />
+
+        <Button
+            android:id="@+id/resetAllPortfoliosButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="All" />
+
+        <Button
+            android:id="@+id/resetPortfolioButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Alpaca" />
+
+        <Button
+            android:id="@+id/resetControlButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Control" />
+    </LinearLayout>
 
     <Button
-        android:id="@+id/resetPortfolioButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Reset Portfolio" />
-
-    <Button
-        android:id="@+id/resetAllPortfoliosButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Reset 6 Portfolios" />
-
-    <Button
-        android:id="@+id/openPortfolioActivityButton"
+        android:id="@+id/dailyPerformaceBtn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -296,12 +297,29 @@
         android:id="@+id/openPortfolioAllActivityButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Open All Portfolios" />
+        android:text="View Portfolio Data" />
+
+    <EditText
+        android:id="@+id/frequencyInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter update frequency or type &quot;sell all&quot; " />
+
+    <Button
+        android:id="@+id/updateFrequencyButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Update Frequency" />
+
+    <Button
+        android:id="@+id/fetchPortfolioButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Refresh" />
 
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="gone" />
+        android:layout_height="wrap_content" />
 
 </LinearLayout>
