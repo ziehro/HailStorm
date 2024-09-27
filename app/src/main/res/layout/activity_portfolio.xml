@@ -1,53 +1,80 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:color/black"
     android:padding="16dp">
 
-    <!-- Existing UI Elements -->
-    <TextView
-        android:id="@+id/capital"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:text="Daily Equity Changes"
-        android:textSize="18sp" />
-
-    <ImageView
-        android:id="@+id/imageView2"
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="107dp"
-        app:srcCompat="@android:drawable/dialog_holo_dark_frame" />
+        android:layout_height="wrap_content">
 
-    <TextView
-        android:id="@+id/holdings"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:text=" "
-        android:textSize="16sp" />
+        <!-- Predictions TextView (Optional: Remove if not needed) -->
 
-    <!-- BarChart View -->
-    <com.github.mikephil.charting.charts.BarChart
-        android:id="@+id/barChart"
-        android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:layout_marginBottom="16dp" />
+        <!-- First BarChart: Daily Equity Changes -->
+        <TextView
+            android:id="@+id/dailyChangesTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Daily Equity Changes"
+            android:textSize="18sp"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
 
-    <!-- Predictions TextView -->
+        <com.github.mikephil.charting.charts.BarChart
+            android:id="@+id/barChartDailyChanges"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_marginBottom="24dp"
+            android:background="@android:color/black" />
 
-    <!-- Fetch Portfolio Button -->
+        <!-- Second BarChart: Google Stock Change Percentage -->
+        <TextView
+            android:id="@+id/googleChangeTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Google Stock Change (%)"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
-    <!-- ProgressBar -->
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        style="?android:attr/progressBarStyleLarge"
-        android:layout_gravity="center"
-        android:layout_marginTop="16dp" />
+        <com.github.mikephil.charting.charts.BarChart
+            android:id="@+id/barChartGoogleChange"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_marginBottom="24dp"
+            android:background="@android:color/black" />
 
-</LinearLayout>
+        <!-- New LineChart: Predicted vs Actual Stock Prices -->
+        <TextView
+            android:id="@+id/priceComparisonTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Predicted vs Actual Prices"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/lineChartPredictedVsActual"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_marginBottom="24dp"
+            android:background="@android:color/black" />
+
+        <!-- ProgressBar -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            style="?android:attr/progressBarStyleLarge"
+            android:layout_gravity="center"
+            android:layout_marginTop="16dp" />
+
+    </LinearLayout>
+</ScrollView>

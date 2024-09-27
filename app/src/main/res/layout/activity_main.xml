@@ -286,18 +286,31 @@
             android:text="Control" />
     </LinearLayout>
 
-    <Button
-        android:id="@+id/dailyPerformaceBtn"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Open Portfolio" />
+        android:orientation="horizontal">
 
-    <Button
-        android:id="@+id/openPortfolioAllActivityButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="View Portfolio Data" />
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="View" />
+
+        <Button
+            android:id="@+id/dailyPerformaceBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Daily Changes" />
+
+        <Button
+            android:id="@+id/openPortfolioAllActivityButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Portfolio Data" />
+    </LinearLayout>
 
     <EditText
         android:id="@+id/frequencyInput"
@@ -305,17 +318,29 @@
         android:layout_height="wrap_content"
         android:hint="Enter update frequency or type &quot;sell all&quot; " />
 
-    <Button
-        android:id="@+id/updateFrequencyButton"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Update Frequency" />
+        android:orientation="horizontal">
 
-    <Button
-        android:id="@+id/fetchPortfolioButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Refresh" />
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <Button
+            android:id="@+id/updateFrequencyButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Update Frequency" />
+
+        <Button
+            android:id="@+id/fetchPortfolioButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Refresh" />
+    </LinearLayout>
 
     <ProgressBar
         android:id="@+id/progressBar"
