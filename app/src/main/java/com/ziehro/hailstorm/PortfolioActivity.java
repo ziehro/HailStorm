@@ -15,6 +15,7 @@ import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.Legend.LegendForm;
+import com.github.mikephil.charting.components.LimitLine;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.LineData;
@@ -24,15 +25,18 @@ import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.github.mikephil.charting.data.Entry;
 
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -46,6 +50,7 @@ public class PortfolioActivity extends AppCompatActivity {
     private BarChart barChartDailyChanges; // First BarChart
     private BarChart barChartGoogleChange; // Second BarChart
     private LineChart lineChartPredictedVsActual;
+    private BarChart barChartAccuracy;
 
 
     @Override
@@ -62,6 +67,10 @@ public class PortfolioActivity extends AppCompatActivity {
         barChartDailyChanges = findViewById(R.id.barChartDailyChanges); // Initialize first BarChart
         barChartGoogleChange = findViewById(R.id.barChartGoogleChange); // Initialize second BarChart
         lineChartPredictedVsActual = findViewById(R.id.lineChartPredictedVsActual);
+        barChartAccuracy = findViewById(R.id.barChartAccuracy);
+
+        // Fetch and display accuracy data
+        fetchAndDisplayAccuracyData();
 
         // Fetch data on activity start
         fetchDailyChanges();
@@ -238,7 +247,7 @@ public class PortfolioActivity extends AppCompatActivity {
 
         // Customize the description
         Description description = new Description();
-        description.setText("Daily Equity Changes");
+        description.setText("");
         description.setTextColor(Color.WHITE);  // Set description color to white
         description.setTextSize(12f);           // Set description text size
         //barChartDailyChanges.setDescription(description);
@@ -431,6 +440,175 @@ public class PortfolioActivity extends AppCompatActivity {
                     Log.e("PortfolioActivity", "Error fetching prediction vs actual data", e);
                     Toast.makeText(this, "Error fetching data", Toast.LENGTH_SHORT).show();
                 });
+    }
+
+    private void fetchAndDisplayAccuracyData() {
+        String portfolio = "portfolio1"; // Replace with dynamic portfolio if needed
+
+        db.collection("daily_accuracies")
+                .document(portfolio)
+                .collection("daily_data") // Subcollection for daily accuracy data
+                .orderBy("date", Query.Direction.ASCENDING)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    Map<String, List<Double>> accuracyMap = new HashMap<>();
+
+                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                        Long correctPred = document.getLong("correct_predictions");
+                        Long totalPred = document.getLong("total_predictions");
+                        String date = document.getString("date");
+
+                        if (correctPred != null && totalPred != null && date != null) {
+                            double accuracyPercentage = ((double) correctPred / totalPred) * 100.0;
+
+                            // Group accuracies by date if multiple entries per day
+                            if (!accuracyMap.containsKey(date)) {
+                                accuracyMap.put(date, new ArrayList<>());
+                            }
+                            accuracyMap.get(date).add(accuracyPercentage);
+                        }
+                    }
+
+                    List<BarEntry> accuracyEntries = new ArrayList<>();
+                    List<String> labels = new ArrayList<>();
+                    float index = 0f;
+
+                    for (Map.Entry<String, List<Double>> entry : accuracyMap.entrySet()) {
+                        String date = entry.getKey();
+                        List<Double> accuracies = entry.getValue();
+
+                        // Calculate average accuracy for the day
+                        double sum = 0.0;
+                        for (Double acc : accuracies) {
+                            sum += acc;
+                        }
+                        double averageAccuracy = sum / accuracies.size();
+
+                        accuracyEntries.add(new BarEntry(index, (float) averageAccuracy));
+                        labels.add(formatDateLabel(date)); // Format the date as needed
+                        index += 1f;
+                    }
+
+                    if (accuracyEntries.isEmpty()) {
+                        Toast.makeText(this, "No accuracy data available.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        // Display data on the BarChart
+                        displayAccuracyBarChart(accuracyEntries, labels);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("PortfolioActivity", "Error fetching accuracy data", e);
+                    Toast.makeText(this, "Error fetching data", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private void displayAccuracyBarChart(List<BarEntry> accuracyEntries, List<String> labels) {
+        if (accuracyEntries.isEmpty()) {
+            Toast.makeText(this, "No accuracy data to display.", Toast.LENGTH_SHORT).show();
+            barChartAccuracy.clear();
+            barChartAccuracy.invalidate();
+            return;
+        }
+
+        // Define a threshold for good accuracy (e.g., 70%)
+        final float ACCURACY_THRESHOLD = 70f;
+
+        List<Integer> colors = new ArrayList<>();
+        for (BarEntry entry : accuracyEntries) {
+            if (entry.getY() >= ACCURACY_THRESHOLD) {
+                colors.add(getResources().getColor(R.color.teal_700)); // Use a defined color resource
+            } else {
+                colors.add(getResources().getColor(R.color.red)); // Use a defined color resource
+            }
+        }
+
+        // Create BarDataSet
+        BarDataSet dataSet = new BarDataSet(accuracyEntries, "Daily Prediction Accuracy (%)");
+        dataSet.setColors(colors);
+        dataSet.setValueTextColor(getResources().getColor(R.color.white));
+        dataSet.setValueTextSize(12f);
+
+        // Show value labels on top of bars
+        dataSet.setDrawValues(true);
+        dataSet.setValueFormatter(new com.github.mikephil.charting.formatter.ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                return String.format(Locale.getDefault(), "%.1f%%", value);
+            }
+        });
+
+        // Create BarData
+        BarData barData = new BarData(dataSet);
+        barData.setBarWidth(0.9f); // Set custom bar width
+
+        // Set data to BarChart
+        barChartAccuracy.setData(barData);
+        barChartAccuracy.setFitBars(true); // Make the x-axis fit exactly all bars
+        barChartAccuracy.invalidate(); // Refresh chart
+
+        // Customize X-axis labels
+        XAxis xAxis = barChartAccuracy.getXAxis();
+        xAxis.setValueFormatter(new IndexAxisValueFormatter(labels));
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setGranularity(1f); // One label per interval
+        xAxis.setGranularityEnabled(true);
+        xAxis.setLabelRotationAngle(-45f); // Rotate labels if dates are long
+        xAxis.setTextColor(getResources().getColor(R.color.white));
+        xAxis.setTextSize(12f);
+
+        // Customize Y-axis labels
+        YAxis leftAxis = barChartAccuracy.getAxisLeft();
+        leftAxis.setTextColor(getResources().getColor(R.color.white));
+        leftAxis.setTextSize(12f);
+        leftAxis.setAxisMinimum(0f); // Start at 0
+        leftAxis.setAxisMaximum(100f); // Assuming accuracy is in percentage
+
+        // Add a limit line at the threshold
+        LimitLine limitLine = new LimitLine(ACCURACY_THRESHOLD, "Target Accuracy");
+        limitLine.setLineColor(getResources().getColor(R.color.red));
+        limitLine.setLineWidth(2f);
+        limitLine.setTextColor(getResources().getColor(R.color.red));
+        limitLine.setTextSize(12f);
+        leftAxis.addLimitLine(limitLine);
+
+        // Disable right Y-axis
+        barChartAccuracy.getAxisRight().setEnabled(false);
+
+        // Customize chart appearance
+        barChartAccuracy.getDescription().setEnabled(false);
+        barChartAccuracy.getLegend().setTextColor(getResources().getColor(R.color.white));
+        barChartAccuracy.getLegend().setFormSize(12f);
+        barChartAccuracy.getLegend().setTextSize(12f);
+        barChartAccuracy.getLegend().setForm(Legend.LegendForm.CIRCLE);
+        barChartAccuracy.getLegend().setWordWrapEnabled(true);
+        barChartAccuracy.getLegend().setEnabled(true);
+
+        // Enable touch gestures
+        barChartAccuracy.setTouchEnabled(true);
+        barChartAccuracy.setDragEnabled(true);
+        barChartAccuracy.setScaleEnabled(true);
+
+        // Animate the chart
+        barChartAccuracy.animateY(1000);
+
+        // Optionally, highlight the highest accuracy day
+        highlightHighestAccuracyBar(accuracyEntries);
+    }
+
+    private void highlightHighestAccuracyBar(List<BarEntry> accuracyEntries) {
+        if (accuracyEntries.isEmpty()) return;
+
+        float highestAccuracy = 0f;
+        int highestIndex = 0;
+
+        for (int i = 0; i < accuracyEntries.size(); i++) {
+            if (accuracyEntries.get(i).getY() > highestAccuracy) {
+                highestAccuracy = accuracyEntries.get(i).getY();
+                highestIndex = i;
+            }
+        }
+
+        barChartAccuracy.highlightValue(highestIndex, 0);
     }
 
 

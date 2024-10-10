@@ -48,6 +48,12 @@
             android:layout_marginBottom="24dp"
             android:background="@android:color/black" />
 
+        <com.github.mikephil.charting.charts.BarChart
+            android:id="@+id/barChartAccuracy"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:layout_marginTop="16dp" />
+
         <!-- New LineChart: Predicted vs Actual Stock Prices -->
         <TextView
             android:id="@+id/priceComparisonTitle"
@@ -57,14 +63,18 @@
             android:text="Predicted vs Actual Prices"
             android:textColor="@android:color/white"
             android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+
 
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/lineChartPredictedVsActual"
             android:layout_width="match_parent"
             android:layout_height="200dp"
             android:layout_marginBottom="24dp"
-            android:background="@android:color/black" />
+            android:background="@android:color/black"
+            android:visibility="gone" />
 
         <!-- ProgressBar -->
         <ProgressBar
@@ -75,6 +85,7 @@
             style="?android:attr/progressBarStyleLarge"
             android:layout_gravity="center"
             android:layout_marginTop="16dp" />
+
 
     </LinearLayout>
 </ScrollView>
