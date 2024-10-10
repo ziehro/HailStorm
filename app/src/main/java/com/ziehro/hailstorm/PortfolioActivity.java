@@ -451,42 +451,21 @@ public class PortfolioActivity extends AppCompatActivity {
                 .orderBy("date", Query.Direction.ASCENDING)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    Map<String, List<Double>> accuracyMap = new HashMap<>();
-
-                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                        Long correctPred = document.getLong("correct_predictions");
-                        Long totalPred = document.getLong("total_predictions");
-                        String date = document.getString("date");
-
-                        if (correctPred != null && totalPred != null && date != null) {
-                            double accuracyPercentage = ((double) correctPred / totalPred) * 100.0;
-
-                            // Group accuracies by date if multiple entries per day
-                            if (!accuracyMap.containsKey(date)) {
-                                accuracyMap.put(date, new ArrayList<>());
-                            }
-                            accuracyMap.get(date).add(accuracyPercentage);
-                        }
-                    }
-
                     List<BarEntry> accuracyEntries = new ArrayList<>();
                     List<String> labels = new ArrayList<>();
                     float index = 0f;
 
-                    for (Map.Entry<String, List<Double>> entry : accuracyMap.entrySet()) {
-                        String date = entry.getKey();
-                        List<Double> accuracies = entry.getValue();
+                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                        Double correctPred = document.getDouble("correct_predictions");
+                        Double totalPred = document.getDouble("total_predictions");
+                        String date = document.getString("date");
 
-                        // Calculate average accuracy for the day
-                        double sum = 0.0;
-                        for (Double acc : accuracies) {
-                            sum += acc;
+                        if (correctPred != null && totalPred != null && date != null) {
+                            double accuracyPercentage = (correctPred / totalPred) * 100.0;
+                            accuracyEntries.add(new BarEntry(index, (float) accuracyPercentage));
+                            labels.add(formatDateLabel(date)); // Format the date as needed
+                            index += 1f;
                         }
-                        double averageAccuracy = sum / accuracies.size();
-
-                        accuracyEntries.add(new BarEntry(index, (float) averageAccuracy));
-                        labels.add(formatDateLabel(date)); // Format the date as needed
-                        index += 1f;
                     }
 
                     if (accuracyEntries.isEmpty()) {
@@ -501,6 +480,7 @@ public class PortfolioActivity extends AppCompatActivity {
                     Toast.makeText(this, "Error fetching data", Toast.LENGTH_SHORT).show();
                 });
     }
+
 
     private void displayAccuracyBarChart(List<BarEntry> accuracyEntries, List<String> labels) {
         if (accuracyEntries.isEmpty()) {
@@ -579,7 +559,7 @@ public class PortfolioActivity extends AppCompatActivity {
         barChartAccuracy.getLegend().setTextColor(getResources().getColor(R.color.white));
         barChartAccuracy.getLegend().setFormSize(12f);
         barChartAccuracy.getLegend().setTextSize(12f);
-        barChartAccuracy.getLegend().setForm(Legend.LegendForm.CIRCLE);
+        barChartAccuracy.getLegend().setForm(com.github.mikephil.charting.components.Legend.LegendForm.CIRCLE);
         barChartAccuracy.getLegend().setWordWrapEnabled(true);
         barChartAccuracy.getLegend().setEnabled(true);
 
@@ -610,8 +590,5 @@ public class PortfolioActivity extends AppCompatActivity {
 
         barChartAccuracy.highlightValue(highestIndex, 0);
     }
-
-
-
 
 }
