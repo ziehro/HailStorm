@@ -7,21 +7,21 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.SetOptions;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,9 +35,6 @@ import okhttp3.Request;
 import okhttp3.Response;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.ziehro.hailstorm.BuildConfig;
-import com.ziehro.hailstorm.PortfolioActivity;
-import com.ziehro.hailstorm.PortfolioActivityAll;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -45,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText frequencyInput;
     private ProgressBar progressBar;
     private TextView portfolio0TotalValue;
-    private TextView portfolio1TotalValue, portfolio2TotalValue, portfolio3TotalValue, portfolio4TotalValue, portfolio5TotalValue, portfolio6TotalValue, controlPortfolioTotalValue, portfolio7TotalValue;
+    private TextView  controlPortfolioTotalValue;
     private Button updateFrequencyButton, resetControlPortfolio, fetchPortfolioButton, dailyPerformanceBtn, openPortfolioAllButton;
     private TextView portfolio0Accuracy;
     private TextView portfolio1Accuracy, portfolio2Accuracy, portfolio3Accuracy, portfolio4Accuracy, portfolio5Accuracy, portfolio6Accuracy, portfolio7Accuracy;
@@ -56,6 +53,8 @@ public class MainActivity extends AppCompatActivity {
 
     private double initialCapital = 100000.0;
     private double controlTotalValue = 0.0;
+    private Spinner commandSpinner;
+    private Button sendCommandButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,29 +76,26 @@ public class MainActivity extends AppCompatActivity {
         frequencyInput = findViewById(R.id.frequencyInput);
         progressBar = findViewById(R.id.progressBar);
         portfolio0TotalValue = findViewById(R.id.portfolio0TotalValue);
-        portfolio1TotalValue = findViewById(R.id.portfolio1TotalValue);
-        portfolio2TotalValue = findViewById(R.id.portfolio2TotalValue);
-        portfolio3TotalValue = findViewById(R.id.portfolio3TotalValue);
-        portfolio4TotalValue = findViewById(R.id.portfolio4TotalValue);
-        portfolio5TotalValue = findViewById(R.id.portfolio5TotalValue);
-        portfolio6TotalValue = findViewById(R.id.portfolio6TotalValue);
-        portfolio7TotalValue = findViewById(R.id.portfolio7TotalValue);
+
         controlPortfolioTotalValue = findViewById(R.id.controlPortfolioTotalValue);
 
         portfolio0Accuracy = findViewById(R.id.portfolio0Accuracy);
-        portfolio1Accuracy = findViewById(R.id.portfolio1Accuracy);
-        portfolio2Accuracy = findViewById(R.id.portfolio2Accuracy);
-        portfolio3Accuracy = findViewById(R.id.portfolio3Accuracy);
-        portfolio4Accuracy = findViewById(R.id.portfolio4Accuracy);
-        portfolio5Accuracy = findViewById(R.id.portfolio5Accuracy);
-        portfolio6Accuracy = findViewById(R.id.portfolio6Accuracy);
-        portfolio7Accuracy = findViewById(R.id.portfolio7Accuracy);
+
 
         updateFrequencyButton = findViewById(R.id.updateFrequencyButton);
         resetControlPortfolio = findViewById(R.id.resetControlButton);
         fetchPortfolioButton = findViewById(R.id.fetchPortfolioButton);
         dailyPerformanceBtn = findViewById(R.id.dailyPerformaceBtn);
         openPortfolioAllButton = findViewById(R.id.openPortfolioAllActivityButton);
+
+        commandSpinner = findViewById(R.id.commandSpinner);
+        sendCommandButton = findViewById(R.id.sendCommandButton);
+
+        // Set up the Spinner with the command options
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.command_options, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        commandSpinner.setAdapter(adapter);
     }
 
     private void initListeners() {
@@ -108,10 +104,8 @@ public class MainActivity extends AppCompatActivity {
         fetchPortfolioButton.setOnClickListener(v -> fetchPortfolio());
         dailyPerformanceBtn.setOnClickListener(v -> openPortfolioActivity());
         openPortfolioAllButton.setOnClickListener(v -> openPortfolioAllActivity());
-
+        sendCommandButton.setOnClickListener(v -> sendSelectedCommand());
         // Add confirmation dialogs for the reset buttons
-        findViewById(R.id.resetPortfolioButton).setOnClickListener(v -> showConfirmationDialog("Are you sure you want to reset the portfolio?", () -> resetPortfolio(v)));
-        findViewById(R.id.resetAllPortfoliosButton).setOnClickListener(v -> showConfirmationDialog("Are you sure you want to reset all 6 portfolios?", () -> resetAllPortfolios(v)));
         findViewById(R.id.resetControlButton).setOnClickListener(v -> showConfirmationDialog("Are you sure you want to reset the control portfolio?", () -> createControlPortfolio(v)));
     }
 
@@ -121,6 +115,54 @@ public class MainActivity extends AppCompatActivity {
                 .setPositiveButton("Yes", (dialog, which) -> onConfirm.run())
                 .setNegativeButton("No", null)
                 .show();
+    }
+
+    private void sendSelectedCommand() {
+        String selectedCommand = commandSpinner.getSelectedItem().toString();
+
+        if (selectedCommand.equals("Select a Command")) {
+            Toast.makeText(this, "Please select a valid command.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Create a command object to send to Firebase
+        Map<String, Object> commandData = new HashMap<>();
+        commandData.put("frequency", selectedCommand);
+        commandData.put("timestamp", FieldValue.serverTimestamp());
+        commandData.put("reschedule", "yes");
+        // You can choose where to store commands in Firebase. For example, in a "commands" collection.
+        db.collection("config").document("updateFrequency")
+                .set(commandData)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(this, "Command sent successfully.", Toast.LENGTH_SHORT).show();
+                    Log.d("MainActivity", "Command sent with ID: ");
+
+                    // Optionally, reset the Spinner to prompt the user
+                    commandSpinner.setSelection(0);
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to send command.", Toast.LENGTH_SHORT).show();
+                    Log.w("MainActivity", "Error adding command", e);
+                });
+    }
+    private void updateFrequency() {
+        String frequency = frequencyInput.getText().toString();
+        progressBar.setVisibility(View.VISIBLE);
+
+        Map<String, Object> updateData = new HashMap<>();
+        updateData.put("frequency", frequency);
+        updateData.put("reschedule", "yes");
+
+        db.collection("config").document("updateFrequency")
+                .set(updateData)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("TAG", "Frequency and reschedule flag updated successfully");
+                    progressBar.setVisibility(View.GONE);
+                })
+                .addOnFailureListener(e -> {
+                    Log.w("TAG", "Error updating frequency", e);
+                    progressBar.setVisibility(View.GONE);
+                });
     }
 
     private void fetchAllPortfoliosTotalValue() {
@@ -181,44 +223,6 @@ public class MainActivity extends AppCompatActivity {
                 "portfolio4", "portfolio5", "portfolio6", "portfolio7"
         };
 
-        for (String portfolioId : portfolioIds) {
-            db.collection("cumulative_accuracies").document(portfolioId)
-                    .get()
-                    .addOnSuccessListener(documentSnapshot -> {
-                        if (documentSnapshot.exists()) {
-                            Double accuracy = documentSnapshot.getDouble("accuracy");
-                            String accuracyText = String.format("%.2f%%", (accuracy != null) ? accuracy : 0.0);
-
-                            switch (portfolioId) {
-                                case "portfolio1":
-                                    portfolio1Accuracy.setText(accuracyText);
-                                    break;
-                                case "portfolio2":
-                                    portfolio2Accuracy.setText(accuracyText);
-                                    break;
-                                case "portfolio3":
-                                    portfolio3Accuracy.setText(accuracyText);
-                                    break;
-                                case "portfolio4":
-                                    portfolio4Accuracy.setText(accuracyText);
-                                    break;
-                                case "portfolio5":
-                                    portfolio5Accuracy.setText(accuracyText);
-                                    break;
-                                case "portfolio6":
-                                    portfolio6Accuracy.setText(accuracyText);
-                                    break;
-                                case "portfolio7":
-                                    portfolio7Accuracy.setText(accuracyText);
-                                    break;
-                            }
-                        }
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.w("TAG", "Error fetching cumulative accuracy data for " + portfolioId, e);
-                        Toast.makeText(MainActivity.this, "Error fetching cumulative accuracy data", Toast.LENGTH_SHORT).show();
-                    });
-        }
     }
 
     private double calculateTotalValue(DocumentSnapshot documentSnapshot) {
@@ -287,20 +291,7 @@ public class MainActivity extends AppCompatActivity {
 
     private int getColorBoxId(String portfolioId) {
         switch (portfolioId) {
-            case "portfolio1":
-                return R.id.portfolio1ColorBox;
-            case "portfolio2":
-                return R.id.portfolio2ColorBox;
-            case "portfolio3":
-                return R.id.portfolio3ColorBox;
-            case "portfolio4":
-                return R.id.portfolio4ColorBox;
-            case "portfolio5":
-                return R.id.portfolio5ColorBox;
-            case "portfolio6":
-                return R.id.portfolio6ColorBox;
-            case "portfolio7":
-                return R.id.portfolio7ColorBox;
+
             default:
                 return 0;
         }
@@ -308,20 +299,7 @@ public class MainActivity extends AppCompatActivity {
 
     private int getPortfolioTextViewId(String portfolioId) {
         switch (portfolioId) {
-            case "portfolio1":
-                return R.id.portfolio1TotalValue;
-            case "portfolio2":
-                return R.id.portfolio2TotalValue;
-            case "portfolio3":
-                return R.id.portfolio3TotalValue;
-            case "portfolio4":
-                return R.id.portfolio4TotalValue;
-            case "portfolio5":
-                return R.id.portfolio5TotalValue;
-            case "portfolio6":
-                return R.id.portfolio6TotalValue;
-            case "portfolio7":
-                return R.id.portfolio7TotalValue;
+
             default:
                 return 0;
         }
@@ -332,53 +310,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updatePortfolioTextView(String portfolioId, String totalValueText) {
-        switch (portfolioId) {
-            case "portfolio1":
-                portfolio1TotalValue.setText(totalValueText);
-                break;
-            case "portfolio2":
-                portfolio2TotalValue.setText(totalValueText);
-                break;
-            case "portfolio3":
-                portfolio3TotalValue.setText(totalValueText);
-                break;
-            case "portfolio4":
-                portfolio4TotalValue.setText(totalValueText);
-                break;
-            case "portfolio5":
-                portfolio5TotalValue.setText(totalValueText);
-                break;
-            case "portfolio6":
-                portfolio6TotalValue.setText(totalValueText);
-                break;
-            case "portfolio7":
-                portfolio7TotalValue.setText(totalValueText);
-                break;
-            case "Control":
-                controlPortfolioTotalValue.setText(totalValueText);
-                break;
+        if (portfolioId.equals("Control")) {
+            controlPortfolioTotalValue.setText(totalValueText);
         }
     }
 
-    private void updateFrequency() {
-        String frequency = frequencyInput.getText().toString();
-        progressBar.setVisibility(View.VISIBLE);
 
-        Map<String, Object> updateData = new HashMap<>();
-        updateData.put("frequency", frequency);
-        updateData.put("reschedule", "yes");
-
-        db.collection("config").document("updateFrequency")
-                .set(updateData)
-                .addOnSuccessListener(aVoid -> {
-                    Log.d("TAG", "Frequency and reschedule flag updated successfully");
-                    progressBar.setVisibility(View.GONE);
-                })
-                .addOnFailureListener(e -> {
-                    Log.w("TAG", "Error updating frequency", e);
-                    progressBar.setVisibility(View.GONE);
-                });
-    }
 
     private void openPortfolioActivity() {
         Intent intent = new Intent(MainActivity.this, PortfolioActivity.class);
@@ -393,116 +330,19 @@ public class MainActivity extends AppCompatActivity {
     private void fetchPortfolio() {
         progressBar.setVisibility(View.VISIBLE);
         fetchAlpacaAccount();
-        updateControlPortfolioValue(getCurrentFocus());
         fetchAllPortfoliosTotalValue();
     }
 
-    private void displayTotalPortfolioValue(DocumentSnapshot documentSnapshot) {
-        if (documentSnapshot.exists()) {
-            Double capital = documentSnapshot.getDouble("capital");
-            Map<String, Object> holdings = (Map<String, Object>) documentSnapshot.get("holdings");
-            Map<String, Object> lastClose = (Map<String, Object>) documentSnapshot.get("lastClose");
 
-            double totalValue = (capital != null) ? capital : 0.0;
-
-            if (holdings != null && lastClose != null) {
-                for (String stock : holdings.keySet()) {
-                    Double shares = (holdings.get(stock) instanceof Number) ? ((Number) holdings.get(stock)).doubleValue() : 0.0;
-                    Double stockPrice = (lastClose.get(stock) instanceof Number) ? ((Number) lastClose.get(stock)).doubleValue() : 0.0;
-                    totalValue += shares * stockPrice;
-                }
-            }
-
-            String totalValueText = String.format("Portfolio 0 Total Value: $%.2f", totalValue);
-            //portfolio0TotalValue.setText(totalValueText);
-        } else {
-            Log.d("TAG", "No data found for portfolio");
-        }
-    }
-
-    public void resetPortfolio(View view) {
-        Map<String, Object> defaultPortfolio = new HashMap<>();
-        defaultPortfolio.put("capital", initialCapital);
-        defaultPortfolio.put("holdings", new HashMap<>());
-
-        String portfolioId = "portfolio0"; // Replace with the actual portfolio ID
-
-        db.collection("portfolio0").document("latest")
-                .set(defaultPortfolio)
-                .addOnSuccessListener(aVoid -> {
-                    // Reset accuracies for this portfolio
-                    resetAccuracies(portfolioId);
-                    Toast.makeText(MainActivity.this, "Portfolio reset successfully", Toast.LENGTH_SHORT).show();
-                })
-                .addOnFailureListener(e -> Toast.makeText(MainActivity.this, "Error resetting portfolio", Toast.LENGTH_SHORT).show());
-
-        fetchPortfolio();
-    }
-
-    public void resetAllPortfolios(View view) {
-        Map<String, Object> defaultPortfolio = new HashMap<>();
-        defaultPortfolio.put("capital", initialCapital);
-        defaultPortfolio.put("holdings", new HashMap<>());
-
-        String[] portfolios = {
-                "portfolio1", "portfolio2", "portfolio3",
-                "portfolio4", "portfolio5", "portfolio6", "portfolio7"
-        };
-
-        for (String portfolio : portfolios) {
-            db.collection(portfolio).document("latest")
-                    .set(defaultPortfolio, SetOptions.merge())
-                    .addOnSuccessListener(aVoid -> {
-                        // Reset accuracies for this portfolio
-                        resetAccuracies(portfolio);
-                    })
-                    .addOnFailureListener(e -> Toast.makeText(MainActivity.this, "Error resetting " + portfolio, Toast.LENGTH_SHORT).show());
-        }
-
-        fetchPortfolio();
-    }
-
-    private void resetAccuracies(String portfolioId) {
-        // Reset all documents in the 'tickers' subcollection under the portfolio's 'accuracies' document to zero accuracy
-        db.collection("accuracies").document(portfolioId).collection("tickers")
-                .get()
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        for (QueryDocumentSnapshot document : task.getResult()) {
-                            Map<String, Object> resetAccuracy = new HashMap<>();
-                            resetAccuracy.put("accuracy", 0);
-                            resetAccuracy.put("timestamp", LocalDateTime.now().toString()); // Update the timestamp
-
-                            db.collection("accuracies").document(portfolioId).collection("tickers").document(document.getId())
-                                    .set(resetAccuracy)
-                                    .addOnSuccessListener(aVoid -> Log.d("ResetAccuracies", "Successfully reset accuracy document: " + document.getId()))
-                                    .addOnFailureListener(e -> Log.w("ResetAccuracies", "Error resetting accuracy document: " + document.getId(), e));
-                        }
-                    } else {
-                        Log.w("ResetAccuracies", "Error getting accuracy documents: ", task.getException());
-                    }
-                });
-
-        // Optionally, reset cumulative accuracies as well
-        Map<String, Object> resetCumulativeAccuracy = new HashMap<>();
-        resetCumulativeAccuracy.put("correct_predictions", 0);
-        resetCumulativeAccuracy.put("total_predictions", 0);
-        resetCumulativeAccuracy.put("accuracy", 0);
-
-        db.collection("cumulative_accuracies").document(portfolioId)
-                .set(resetCumulativeAccuracy)
-                .addOnSuccessListener(aVoid -> Log.d("ResetAccuracies", "Successfully reset cumulative accuracy for: " + portfolioId))
-                .addOnFailureListener(e -> Log.w("ResetAccuracies", "Error resetting cumulative accuracy for: " + portfolioId, e));
-    }
 
     public void createControlPortfolio(View view) {
-        db.collection("portfolio1").document("latest")
+        db.collection("predictions").document("GOOG")
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
-                        Map<String, Object> lastClose = (Map<String, Object>) documentSnapshot.get("lastClose");
-                        if (lastClose != null) {
-                            setupControlPortfolio(lastClose);
+                        double current_price = (double) documentSnapshot.get("current_price");
+                        if (current_price != 3) {
+                            setupControlPortfolio(current_price);
                         } else {
                             Toast.makeText(MainActivity.this, "No last close prices found in portfolio1", Toast.LENGTH_SHORT).show();
                         }
@@ -517,7 +357,7 @@ public class MainActivity extends AppCompatActivity {
         fetchPortfolio();
     }
 
-    private void setupControlPortfolio(Map<String, Object> lastClose) {
+    private void setupControlPortfolio(double lastClose) {
         String[] tickers = {"GOOG"};
 
         double investmentPerStock = initialCapital / tickers.length;
@@ -528,7 +368,7 @@ public class MainActivity extends AppCompatActivity {
         Map<String, Object> holdings = new HashMap<>();
 
         for (String ticker : tickers) {
-            Double purchasePrice = (lastClose.get(ticker) instanceof Number) ? ((Number) lastClose.get(ticker)).doubleValue() : 0.0;
+            Double purchasePrice = lastClose;
             if (purchasePrice > 0) {
                 double numShares = investmentPerStock / purchasePrice;
                 Map<String, Object> stockInfo = new HashMap<>();
@@ -549,73 +389,6 @@ public class MainActivity extends AppCompatActivity {
                 .addOnFailureListener(e -> {
                     Toast.makeText(MainActivity.this, "Error creating control portfolio", Toast.LENGTH_SHORT).show();
                     Log.e("TAG", "Error creating control portfolio", e);
-                });
-    }
-
-    public void updateControlPortfolioValue(View view) {
-        db.collection("portfolio1").document("latest")
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        Map<String, Object> lastClose = (Map<String, Object>) documentSnapshot.get("lastClose");
-                        if (lastClose != null) {
-                            updateControlPortfolio(lastClose);
-                        } else {
-                            Toast.makeText(MainActivity.this, "No last close prices found in portfolio1", Toast.LENGTH_SHORT).show();
-                        }
-                    } else {
-                        Toast.makeText(MainActivity.this, "Portfolio1 document does not exist", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(MainActivity.this, "Error fetching last close prices from portfolio1", Toast.LENGTH_SHORT).show();
-                    Log.e("TAG", "Error fetching last close prices from portfolio1", e);
-                });
-    }
-
-    private void updateControlPortfolio(Map<String, Object> lastClose) {
-        db.collection("Control").document("latest")
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        Map<String, Object> controlPortfolio = documentSnapshot.getData();
-                        if (controlPortfolio != null) {
-                            Map<String, Object> holdings = (Map<String, Object>) controlPortfolio.get("holdings");
-
-                            if (holdings != null) {
-                                double totalValue = 0.0;
-                                for (String ticker : holdings.keySet()) {
-                                    Map<String, Object> stockInfo = (Map<String, Object>) holdings.get(ticker);
-                                    Double shares = (stockInfo.get("shares") instanceof Number) ? ((Number) stockInfo.get("shares")).doubleValue() : 0.0;
-                                    Double stockPrice = (lastClose.get(ticker) instanceof Number) ? ((Number) lastClose.get(ticker)).doubleValue() : 0.0;
-
-                                    totalValue += shares * stockPrice;
-                                    controlTotalValue = totalValue;
-                                }
-
-                                controlPortfolio.put("capital", totalValue);
-
-                                db.collection("Control").document("latest")
-                                        .set(controlPortfolio)
-                                        .addOnSuccessListener(aVoid -> Toast.makeText(MainActivity.this, "Control portfolio updated successfully", Toast.LENGTH_SHORT).show())
-                                        .addOnFailureListener(e -> {
-                                            Toast.makeText(MainActivity.this, "Error updating control portfolio", Toast.LENGTH_SHORT).show();
-                                            Log.e("TAG", "Error updating control portfolio", e);
-                                        });
-                                String totalValueText = String.format("Control Total Value: $%.2f", totalValue);
-                                controlPortfolioTotalValue.setText(totalValueText);
-
-                            } else {
-                                Toast.makeText(MainActivity.this, "No holdings found in control portfolio", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    } else {
-                        Toast.makeText(MainActivity.this, "Control portfolio does not exist", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(MainActivity.this, "Error fetching control portfolio", Toast.LENGTH_SHORT).show();
-                    Log.e("TAG", "Error fetching control portfolio", e);
                 });
     }
 

@@ -1,5 +1,16 @@
 <resources>
     <string name="app_name">HailStorm</string>
     <string name="google_app_id">1:816494855871:android:555960e6ab9db34358e80a</string>
+    <!-- Add these entries in res/values/strings.xml -->
+    <string-array name="command_options">
+        <item>Select a Command</item>
+        <item>1 minute</item>
+        <item>5 minutes</item>
+        <item>Train Model</item>
+        <item>Sell All</item>
+        <item>Update Accuracies</item>
+        <item>Update Model</item>
+        <item>Check Alpaca</item>
+    </string-array>
 
 </resources>

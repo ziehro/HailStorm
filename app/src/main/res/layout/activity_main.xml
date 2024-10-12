@@ -33,223 +33,21 @@
             android:layout_height="20dp"
             android:layout_marginRight="8dp"
             android:background="#D3D3D3" />
+
         <TextView
             android:id="@+id/portfolio0TotalValue"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textStyle="bold"
             android:text="Portfolio 0 Total Value: $0.00"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
         <TextView
             android:id="@+id/portfolio0Accuracy"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Accuracy:"
-            android:textSize="16sp" />
-    </LinearLayout>
-
-    <!-- Portfolio 1 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp">
-
-        <View
-            android:id="@+id/portfolio1ColorBox"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginRight="8dp"
-            android:background="#D3D3D3" />
-        <TextView
-            android:id="@+id/portfolio1TotalValue"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Portfolio 1 Total Value: $0.00"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-        <TextView
-            android:id="@+id/portfolio1Accuracy"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Accuracy: 0%"
-            android:textSize="16sp" />
-    </LinearLayout>
-
-    <!-- Portfolio 2 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp">
-
-        <View
-            android:id="@+id/portfolio2ColorBox"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginRight="8dp"
-            android:background="#D3D3D3" />
-        <TextView
-            android:id="@+id/portfolio2TotalValue"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Portfolio 2 Total Value: $0.00"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-        <TextView
-            android:id="@+id/portfolio2Accuracy"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Accuracy: 0%"
-            android:textSize="16sp" />
-    </LinearLayout>
-
-    <!-- Portfolio 3 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp">
-
-        <View
-            android:id="@+id/portfolio3ColorBox"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginRight="8dp"
-            android:background="#D3D3D3" />
-        <TextView
-            android:id="@+id/portfolio3TotalValue"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Portfolio 3 Total Value: $0.00"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-        <TextView
-            android:id="@+id/portfolio3Accuracy"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Accuracy: 0%"
-            android:textSize="16sp" />
-    </LinearLayout>
-
-    <!-- Portfolio 4 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp">
-
-        <View
-            android:id="@+id/portfolio4ColorBox"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginRight="8dp"
-            android:background="#D3D3D3" />
-        <TextView
-            android:id="@+id/portfolio4TotalValue"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Portfolio 4 Total Value: $0.00"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-        <TextView
-            android:id="@+id/portfolio4Accuracy"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Accuracy: 0%"
-            android:textSize="16sp" />
-    </LinearLayout>
-
-    <!-- Portfolio 5 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp">
-
-        <View
-            android:id="@+id/portfolio5ColorBox"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginRight="8dp"
-            android:background="#D3D3D3" />
-        <TextView
-            android:id="@+id/portfolio5TotalValue"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Portfolio 5 Total Value: $0.00"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-        <TextView
-            android:id="@+id/portfolio5Accuracy"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Accuracy: 0%"
-            android:textSize="16sp" />
-    </LinearLayout>
-
-    <!-- Portfolio 6 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp">
-
-        <View
-            android:id="@+id/portfolio6ColorBox"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginRight="8dp"
-            android:background="#D3D3D3" />
-        <TextView
-            android:id="@+id/portfolio6TotalValue"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Portfolio 6 Total Value: $0.00"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-        <TextView
-            android:id="@+id/portfolio6Accuracy"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Accuracy: 0%"
-            android:textSize="16sp" />
-    </LinearLayout>
-
-    <!-- Portfolio 7 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp">
-
-        <View
-            android:id="@+id/portfolio7ColorBox"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginRight="8dp"
-            android:background="#D3D3D3" />
-
-        <TextView
-            android:id="@+id/portfolio7TotalValue"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Portfolio 7 Total Value: $0.00"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-        <TextView
-            android:id="@+id/portfolio7Accuracy"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Accuracy: 0%"
             android:textSize="16sp" />
     </LinearLayout>
 
@@ -271,7 +69,8 @@
             android:id="@+id/resetAllPortfoliosButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="All" />
+            android:text="All"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/resetPortfolioButton"
@@ -309,14 +108,16 @@
             android:id="@+id/openPortfolioAllActivityButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Portfolio Data" />
+            android:text="Portfolio Data"
+            android:visibility="gone" />
     </LinearLayout>
 
     <EditText
         android:id="@+id/frequencyInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Enter update frequency or type &quot;sell all&quot; " />
+        android:hint="Enter update frequency or type &quot;sell all&quot; "
+        android:visibility="gone" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -333,7 +134,8 @@
             android:id="@+id/updateFrequencyButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Update Frequency" />
+            android:text="Update Frequency"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/fetchPortfolioButton"
@@ -341,6 +143,24 @@
             android:layout_height="wrap_content"
             android:text="Refresh" />
     </LinearLayout>
+
+    <!-- Add this inside your existing layout, e.g., LinearLayout or ConstraintLayout -->
+    <Spinner
+        android:id="@+id/commandSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:spinnerMode="dropdown" />
+
+    <!-- Optionally, add a button to send the selected command -->
+    <Button
+        android:id="@+id/sendCommandButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right"
+        android:layout_marginTop="8dp"
+        android:text="Send Command" />
+
 
     <ProgressBar
         android:id="@+id/progressBar"
