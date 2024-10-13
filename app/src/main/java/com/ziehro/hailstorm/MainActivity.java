@@ -14,16 +14,13 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.google.android.gms.tasks.Task;
-import com.google.android.gms.tasks.Tasks;
+
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +31,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public class MainActivity extends AppCompatActivity {
@@ -41,18 +40,17 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseFirestore db;
     private EditText frequencyInput;
     private ProgressBar progressBar;
-    private TextView portfolio0TotalValue;
-    private TextView  controlPortfolioTotalValue;
-    private Button updateFrequencyButton, resetControlPortfolio, fetchPortfolioButton, dailyPerformanceBtn, openPortfolioAllButton;
-    private TextView portfolio0Accuracy;
-    private TextView portfolio1Accuracy, portfolio2Accuracy, portfolio3Accuracy, portfolio4Accuracy, portfolio5Accuracy, portfolio6Accuracy, portfolio7Accuracy;
 
+    private Button updateFrequencyButton, resetControlPortfolio, fetchPortfolioButton, dailyPerformanceBtn, openPortfolioAllButton;
+
+    private TextView modelR2, modelMAE, modelRMSE, modelAccuracy; // Added TextViews for model metrics
+
+    private TextView alpacaEquity, alpacaHoldings; // Added TextViews for Alpaca data
 
     private OkHttpClient client = new OkHttpClient();
     private Gson gson = new Gson();
 
     private double initialCapital = 100000.0;
-    private double controlTotalValue = 0.0;
     private Spinner commandSpinner;
     private Button sendCommandButton;
 
@@ -61,10 +59,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Initialize Firebase
         initViews();
         initListeners();
         fetchPortfolio();
-        // Removed redundant fetchAllPortfoliosTotalValue call
     }
 
     String API_KEY_ID = BuildConfig.ALPACA_API_KEY_ID;
@@ -75,12 +73,14 @@ public class MainActivity extends AppCompatActivity {
 
         frequencyInput = findViewById(R.id.frequencyInput);
         progressBar = findViewById(R.id.progressBar);
-        portfolio0TotalValue = findViewById(R.id.portfolio0TotalValue);
 
-        controlPortfolioTotalValue = findViewById(R.id.controlPortfolioTotalValue);
+        modelR2 = findViewById(R.id.modelR2);
+        modelMAE = findViewById(R.id.modelMAE);
+        modelRMSE = findViewById(R.id.modelRMSE);
+        modelAccuracy = findViewById(R.id.modelAccuracy);
 
-        portfolio0Accuracy = findViewById(R.id.portfolio0Accuracy);
-
+        alpacaEquity = findViewById(R.id.alpacaEquity);
+        alpacaHoldings = findViewById(R.id.alpacaHoldings);
 
         updateFrequencyButton = findViewById(R.id.updateFrequencyButton);
         resetControlPortfolio = findViewById(R.id.resetControlButton);
@@ -100,13 +100,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void initListeners() {
         updateFrequencyButton.setOnClickListener(v -> updateFrequency());
-        resetControlPortfolio.setOnClickListener(v -> createControlPortfolio(getCurrentFocus()));
+        resetControlPortfolio.setOnClickListener(v -> showConfirmationDialog("Are you sure you want to reset the control portfolio?", () -> createControlPortfolio(v)));
         fetchPortfolioButton.setOnClickListener(v -> fetchPortfolio());
         dailyPerformanceBtn.setOnClickListener(v -> openPortfolioActivity());
         openPortfolioAllButton.setOnClickListener(v -> openPortfolioAllActivity());
         sendCommandButton.setOnClickListener(v -> sendSelectedCommand());
-        // Add confirmation dialogs for the reset buttons
-        findViewById(R.id.resetControlButton).setOnClickListener(v -> showConfirmationDialog("Are you sure you want to reset the control portfolio?", () -> createControlPortfolio(v)));
     }
 
     private void showConfirmationDialog(String message, Runnable onConfirm) {
@@ -145,8 +143,14 @@ public class MainActivity extends AppCompatActivity {
                     Log.w("MainActivity", "Error adding command", e);
                 });
     }
+
     private void updateFrequency() {
-        String frequency = frequencyInput.getText().toString();
+        String frequency = frequencyInput.getText().toString().trim();
+        if (frequency.isEmpty()) {
+            Toast.makeText(this, "Frequency input cannot be empty.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         progressBar.setVisibility(View.VISIBLE);
 
         Map<String, Object> updateData = new HashMap<>();
@@ -157,165 +161,15 @@ public class MainActivity extends AppCompatActivity {
                 .set(updateData)
                 .addOnSuccessListener(aVoid -> {
                     Log.d("TAG", "Frequency and reschedule flag updated successfully");
+                    Toast.makeText(MainActivity.this, "Frequency updated successfully.", Toast.LENGTH_SHORT).show();
                     progressBar.setVisibility(View.GONE);
                 })
                 .addOnFailureListener(e -> {
                     Log.w("TAG", "Error updating frequency", e);
+                    Toast.makeText(MainActivity.this, "Error updating frequency.", Toast.LENGTH_SHORT).show();
                     progressBar.setVisibility(View.GONE);
                 });
     }
-
-    private void fetchAllPortfoliosTotalValue() {
-        String[] portfolioIds = {
-                "portfolio1", "portfolio2", "portfolio3",
-                "portfolio4", "portfolio5", "portfolio6", "portfolio7"
-        };
-        Map<String, Double> portfolioValues = new HashMap<>();
-
-        List<Task<DocumentSnapshot>> tasks = new ArrayList<>();
-
-        for (String portfolioId : portfolioIds) {
-            DocumentReference docRef = db.collection(portfolioId).document("latest");
-            tasks.add(docRef.get());
-            Log.d("DebugFetch", "Added task for " + portfolioId);
-
-        }
-
-        Tasks.whenAllSuccess(tasks)
-                .addOnSuccessListener(results -> {
-                    Log.d("DebugFetch", "Tasks.whenAllSuccess onSuccessListener triggered.");
-
-                    for (int i = 0; i < results.size(); i++) {
-                        DocumentSnapshot documentSnapshot = (DocumentSnapshot) results.get(i);
-                        String portfolioId = portfolioIds[i];
-                        double totalValue = calculateTotalValue(documentSnapshot);
-                        portfolioValues.put(portfolioId, totalValue);
-
-                        // Update the portfolio's total value in the UI
-                        String totalValueText = String.format(
-                                "Portfoliosss %s Total Value: $%.2f",
-                                portfolioId.replace("portfolio", ""), totalValue
-                        );
-                        updatePortfolioTextView(portfolioId, totalValueText);
-                    }
-
-                    // Once all portfolios are processed, apply the color gradient
-                    fetchAllPortfoliosAccuracy(); // Fetch and display accuracy data
-                    applyColorGradient(portfolioValues);
-
-                    // Hide the progress bar after all operations are complete
-                    progressBar.setVisibility(View.GONE);
-                })
-                .addOnFailureListener(e -> {
-                    Log.w("TAG", "Error fetching portfolio data", e);
-                    Toast.makeText(
-                            MainActivity.this,
-                            "Error fetching portfolio data",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                    progressBar.setVisibility(View.GONE);
-                });
-    }
-
-    private void fetchAllPortfoliosAccuracy() {
-        String[] portfolioIds = {
-                "portfolio1", "portfolio2", "portfolio3",
-                "portfolio4", "portfolio5", "portfolio6", "portfolio7"
-        };
-
-    }
-
-    private double calculateTotalValue(DocumentSnapshot documentSnapshot) {
-        if (documentSnapshot.exists()) {
-            Double capital = documentSnapshot.getDouble("capital");
-            Map<String, Object> holdings = (Map<String, Object>) documentSnapshot.get("holdings");
-            Map<String, Object> lastClose = (Map<String, Object>) documentSnapshot.get("lastClose");
-
-            double totalValue = (capital != null) ? capital : 0.0;
-
-            if (holdings != null && lastClose != null) {
-                for (String stock : holdings.keySet()) {
-                    Double shares = (holdings.get(stock) instanceof Number) ? ((Number) holdings.get(stock)).doubleValue() : 0.0;
-                    Double stockPrice = (lastClose.get(stock) instanceof Number) ? ((Number) lastClose.get(stock)).doubleValue() : 0.0;
-                    totalValue += shares * stockPrice;
-                }
-            }
-
-            return totalValue;
-        }
-        return 0.0;
-    }
-
-    private void applyColorGradient(Map<String, Double> portfolioValues) {
-        if (portfolioValues.isEmpty()) return;
-
-        double maxValue = Collections.max(portfolioValues.values());
-        double minValue = Collections.min(portfolioValues.values());
-
-        // Avoid division by zero
-        double range = maxValue - minValue;
-        if (range == 0) range = 1;
-
-        for (Map.Entry<String, Double> entry : portfolioValues.entrySet()) {
-            String portfolioId = entry.getKey();
-            double value = entry.getValue();
-
-            int color;
-            if (value < controlTotalValue) {
-                // Set color to red if the portfolio value is below the control total value
-                color = Color.rgb(255, 0, 0);
-            } else {
-                // Calculate color intensity based on the portfolio's value relative to the min/max
-                float intensity = (float) ((value - minValue) / range);
-                intensity = Math.min(Math.max(intensity, 0f), 1f); // Clamp between 0 and 1
-                int green = (int) (255 * intensity);
-                color = Color.rgb(0, green, 0);
-            }
-
-            // Set the background color of the corresponding box
-            View colorBox = findViewById(getColorBoxId(portfolioId));
-            if (colorBox != null) {
-                colorBox.setBackgroundColor(color);
-            }
-
-            // Update the portfolio's total value text
-            String displayPortfolioId = portfolioId.replace("portfolio", "");
-            String totalValueText = String.format("Portfolio %s Total Value: $%.2f", displayPortfolioId, value);
-
-            TextView portfolioValueTextView = findViewById(getPortfolioTextViewId(portfolioId));
-            if (portfolioValueTextView != null) {
-                portfolioValueTextView.setText(totalValueText);
-            }
-        }
-    }
-
-    private int getColorBoxId(String portfolioId) {
-        switch (portfolioId) {
-
-            default:
-                return 0;
-        }
-    }
-
-    private int getPortfolioTextViewId(String portfolioId) {
-        switch (portfolioId) {
-
-            default:
-                return 0;
-        }
-    }
-
-    private void updatePortfolioTotalValue(String portfolioId, DocumentSnapshot documentSnapshot) {
-        // Removed as it's no longer needed
-    }
-
-    private void updatePortfolioTextView(String portfolioId, String totalValueText) {
-        if (portfolioId.equals("Control")) {
-            controlPortfolioTotalValue.setText(totalValueText);
-        }
-    }
-
-
 
     private void openPortfolioActivity() {
         Intent intent = new Intent(MainActivity.this, PortfolioActivity.class);
@@ -330,9 +184,9 @@ public class MainActivity extends AppCompatActivity {
     private void fetchPortfolio() {
         progressBar.setVisibility(View.VISIBLE);
         fetchAlpacaAccount();
-        fetchAllPortfoliosTotalValue();
+        fetchModelMetrics();
+        fetchModelAccuracy();
     }
-
 
 
     public void createControlPortfolio(View view) {
@@ -340,60 +194,70 @@ public class MainActivity extends AppCompatActivity {
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
-                        double current_price = (double) documentSnapshot.get("current_price");
-                        if (current_price != 3) {
-                            setupControlPortfolio(current_price);
+                        Double currentPrice = documentSnapshot.getDouble("current_price");
+                        if (currentPrice != null && currentPrice > 0) {
+                            setupControlPortfolio(currentPrice);
                         } else {
-                            Toast.makeText(MainActivity.this, "No last close prices found in portfolio1", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "Invalid current price for GOOG.", Toast.LENGTH_SHORT).show();
                         }
                     } else {
-                        Toast.makeText(MainActivity.this, "Portfolio1 document does not exist", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "GOOG document does not exist in predictions.", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(MainActivity.this, "Error fetching last close prices from portfolio1", Toast.LENGTH_SHORT).show();
-                    Log.e("TAG", "Error fetching last close prices from portfolio1", e);
+                    Toast.makeText(MainActivity.this, "Error fetching current price from predictions.", Toast.LENGTH_SHORT).show();
+                    Log.e("TAG", "Error fetching current price from predictions", e);
                 });
-        fetchPortfolio();
     }
 
-    private void setupControlPortfolio(double lastClose) {
+    /**
+     * Sets up the control portfolio by investing as much as possible based on the current stock price.
+     * @param currentPrice The current price of the stock.
+     */
+    private void setupControlPortfolio(double currentPrice) {
         String[] tickers = {"GOOG"};
 
-        double investmentPerStock = initialCapital / tickers.length;
-
+        // Initialize the control portfolio map
         Map<String, Object> controlPortfolio = new HashMap<>();
-        controlPortfolio.put("capital", initialCapital);
+        controlPortfolio.put("capital", initialCapital); // Total capital invested
 
         Map<String, Object> holdings = new HashMap<>();
 
         for (String ticker : tickers) {
-            Double purchasePrice = lastClose;
+            Double purchasePrice = currentPrice;
             if (purchasePrice > 0) {
-                double numShares = investmentPerStock / purchasePrice;
+                double numShares = initialCapital / purchasePrice; // Invest all capital into one stock
+                numShares = Math.floor(numShares * 100) / 100; // Round down to 2 decimal places if needed
+
                 Map<String, Object> stockInfo = new HashMap<>();
                 stockInfo.put("shares", numShares);
                 stockInfo.put("purchasePrice", purchasePrice);
 
                 holdings.put(ticker, stockInfo);
             } else {
-                Log.w("TAG", "No valid last close price for " + ticker);
+                Log.w("TAG", "No valid current price for " + ticker);
             }
         }
 
         controlPortfolio.put("holdings", holdings);
 
+        // Save the control portfolio to Firestore
         db.collection("Control").document("latest")
                 .set(controlPortfolio)
-                .addOnSuccessListener(aVoid -> Toast.makeText(MainActivity.this, "Control portfolio created successfully", Toast.LENGTH_SHORT).show())
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(MainActivity.this, "Control portfolio created successfully", Toast.LENGTH_SHORT).show();
+                    fetchPortfolio(); // Refresh portfolio data after creation
+                })
                 .addOnFailureListener(e -> {
                     Toast.makeText(MainActivity.this, "Error creating control portfolio", Toast.LENGTH_SHORT).show();
                     Log.e("TAG", "Error creating control portfolio", e);
                 });
     }
 
+    /**
+     * Fetches Alpaca account data including equity.
+     */
     private void fetchAlpacaAccount() {
-
         String url = "https://paper-api.alpaca.markets/v2/account";
 
         Request request = new Request.Builder()
@@ -422,10 +286,10 @@ public class MainActivity extends AppCompatActivity {
                     double equity = account.get("equity").getAsDouble();
 
                     runOnUiThread(() -> {
-                        portfolio0TotalValue.setText(String.format("Alpaca Total Value: $%.2f", equity));
-                        portfolio0TotalValue.setTextColor(Color.YELLOW); // Set text color to yellow
+                        alpacaEquity.setText(String.format("Alpaca Equity: $%.2f", equity));
+                        alpacaEquity.setTextColor(Color.YELLOW); // Set text color to yellow
 
-                        progressBar.setVisibility(View.GONE);
+                        fetchAlpacaHoldings(); // Fetch holdings after fetching equity
                     });
                 } else {
                     runOnUiThread(() -> {
@@ -437,4 +301,165 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+
+    private void fetchAlpacaHoldings() {
+        String url = "https://paper-api.alpaca.markets/v2/positions";
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("APCA-API-KEY-ID", API_KEY_ID)
+                .addHeader("APCA-API-SECRET-KEY", SECRET_KEY)
+                .get()
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Handle request failure
+                runOnUiThread(() -> {
+                    Toast.makeText(MainActivity.this, "Failed to fetch Alpaca holdings", Toast.LENGTH_SHORT).show();
+                    progressBar.setVisibility(View.GONE);
+                });
+                Log.e("AlpacaAPI", "Error fetching holdings: ", e);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    String responseBody = response.body().string();
+                    JsonArray holdingsArray = gson.fromJson(responseBody, JsonArray.class);
+
+                    StringBuilder holdingsBuilder = new StringBuilder();
+                    if (holdingsArray.size() > 0) {
+                        for (JsonElement holdingElement : holdingsArray) {
+                            JsonObject holding = holdingElement.getAsJsonObject();
+                            String symbol = holding.get("symbol").getAsString();
+                            double qty = holding.get("qty").getAsDouble();
+                            double avgEntryPrice = holding.get("avg_entry_price").getAsDouble();
+                            double currentPrice = holding.get("current_price").getAsDouble();
+                            double marketValue = holding.get("market_value").getAsDouble();
+
+                            holdingsBuilder.append(String.format(
+                                    "%s: %.2f shares @ $%.2f each ($%.2f)\n",
+                                    symbol, qty, currentPrice, marketValue
+                            ));
+                        }
+                    } else {
+                        holdingsBuilder.append("No holdings.");
+                    }
+
+                    runOnUiThread(() -> {
+                        alpacaHoldings.setText("Alpaca Holdings:\n" + holdingsBuilder.toString());
+                        alpacaHoldings.setTextColor(Color.YELLOW); // Set text color to yellow
+
+                        progressBar.setVisibility(View.GONE);
+                    });
+                } else {
+                    runOnUiThread(() -> {
+                        Toast.makeText(MainActivity.this, "Failed to fetch Alpaca holdings", Toast.LENGTH_SHORT).show();
+                        progressBar.setVisibility(View.GONE);
+                    });
+                    Log.e("AlpacaAPI", "Unsuccessful response: " + response.code());
+                }
+            }
+        });
+    }
+
+    /**
+     * Fetches the most recent model metrics from Firebase Firestore and displays them.
+     */
+    private void fetchModelMetrics() {
+        // Reference to the 'model_evaluations' collection
+        db.collection("model_evaluations").document("portfolio1").collection("tickers")
+                .orderBy("__name__") // Order by document ID (date)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        // Assuming documents are named as 'YYYY-MM-DD', the last document is the most recent
+                        List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
+                        DocumentSnapshot latestDocument = documents.get(documents.size() - 1);
+
+                        Double r2 = latestDocument.getDouble("R2_Score");
+                        Double mae = latestDocument.getDouble("MAE");
+                        Double rmse = latestDocument.getDouble("RMSE");
+
+                        runOnUiThread(() -> {
+                            modelR2.setText(String.format("R²: %.2f", r2 != null ? r2 : 0.0));
+                            modelMAE.setText(String.format("MAE: %.2f", mae != null ? mae : 0.0));
+                            modelRMSE.setText(String.format("RMSE: %.2f", mae != null ? mae : 0.0));
+                            modelAccuracy.setText(String.format("Model Accuracy: %.2f%%", calculateModelAccuracy(rmse, mae)));
+                        });
+                    } else {
+                        runOnUiThread(() -> {
+                            modelR2.setText("R²: N/A");
+                            modelMAE.setText("MAE: N/A");
+                            modelAccuracy.setText("Model Accuracy: N/A");
+                        });
+                        Log.w("Firestore", "No model metrics documents found.");
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    runOnUiThread(() -> {
+                        Toast.makeText(MainActivity.this, "Failed to fetch model metrics.", Toast.LENGTH_SHORT).show();
+                    });
+                    Log.e("Firestore", "Error fetching model metrics", e);
+                });
+    }
+
+    /**
+     * Calculates model accuracy based on RMSE and MAE.
+     * Modify this method based on how you define accuracy.
+     * For demonstration, let's assume accuracy is inversely related to RMSE and MAE.
+     */
+    private double calculateModelAccuracy(double rmse, double mae) {
+        // Example calculation (modify as per your actual accuracy computation)
+        if (rmse == 0 && mae == 0) return 100.0;
+        double accuracy = 100.0 - ((rmse + mae) / 2);
+        return Math.max(accuracy, 0.0); // Ensure accuracy isn't negative
+    }
+
+    /**
+     * Fetches prediction data from Firestore and calculates model accuracy.
+     */
+    /**
+     * Fetches model accuracy from the 'predictions/GOOG/metrics/latest' document in Firestore and displays it.
+     */
+    private void fetchModelAccuracy() {
+        // Reference to the 'predictions/GOOG/metrics/latest' document
+        DocumentReference metricsRef = db.collection("predictions")
+                .document("GOOG");
+
+        metricsRef.get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        Double correct = documentSnapshot.getDouble("correct_predictions");
+                        Double total = documentSnapshot.getDouble("total_predictions");
+
+                        double accuracy;
+                        if (correct != null && total != null && total > 0) {
+                            accuracy = (correct / total) * 100;
+                        } else {
+                            accuracy = 0.0;
+                        }
+
+                        runOnUiThread(() -> {
+                            modelAccuracy.setText(String.format("Model Accuracy: %.2f%%", accuracy));
+                        });
+                    } else {
+                        runOnUiThread(() -> {
+                            modelAccuracy.setText("Model Accuracy: N/A");
+                        });
+                        Log.w("Firestore", "'predictions/GOOG/metrics/latest' document does not exist.");
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    runOnUiThread(() -> {
+                        Toast.makeText(MainActivity.this, "Failed to fetch model accuracy.", Toast.LENGTH_SHORT).show();
+                    });
+                    Log.e("Firestore", "Error fetching model accuracy from 'predictions/GOOG/metrics/latest'", e);
+                });
+    }
+
+
 }

@@ -1,170 +1,225 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
+    android:fillViewport="true"
     tools:context=".MainActivity">
 
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="match_parent"
-        android:layout_height="120dp"
-        app:srcCompat="@drawable/iconimage" />
-
-    <TextView
-        android:id="@+id/controlPortfolioTotalValue"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:text="Control Portfolio Total Value: $0.00" />
-
-    <!-- Portfolio 0 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp">
+        android:orientation="vertical">
 
-        <View
-            android:id="@+id/portfolio0ColorBox"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginRight="8dp"
-            android:background="#D3D3D3" />
+        <!-- Existing ImageView -->
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            app:srcCompat="@drawable/iconimage" />
 
+        <!-- Control Portfolio Total Value -->
         <TextView
-            android:id="@+id/portfolio0TotalValue"
-            android:layout_width="0dp"
+            android:id="@+id/controlPortfolioTotalValue"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Portfolio 0 Total Value: $0.00"
-            android:textSize="16sp"
+            android:padding="8dp"
+            android:text="Control Portfolio Total Value: $0.00"
+            android:textSize="18sp"
             android:textStyle="bold" />
 
+        <!-- Alpaca Account Equity -->
         <TextView
-            android:id="@+id/portfolio0Accuracy"
+            android:id="@+id/alpacaEquity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Accuracy:"
+            android:padding="8dp"
+            android:text="Alpaca Equity: $0.00"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <!-- Alpaca Holdings -->
+        <TextView
+            android:id="@+id/alpacaHoldings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:text="Alpaca Holdings: "
             android:textSize="16sp" />
-    </LinearLayout>
 
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/textView"
-            android:layout_width="wrap_content"
+        <!-- Portfolio 0 (Assuming it's Alpaca or another portfolio) -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="Reset" />
+            android:orientation="horizontal"
+            android:padding="8dp">
 
-        <Button
-            android:id="@+id/resetAllPortfoliosButton"
-            android:layout_width="wrap_content"
+            <View
+                android:id="@+id/portfolio0ColorBox"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginRight="8dp"
+                android:background="#D3D3D3" />
+
+            <TextView
+                android:id="@+id/modelAccuracy"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Accuracy: N/A"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <!-- Model Metrics -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="All"
+            android:orientation="vertical"
+            android:padding="8dp">
+
+            <TextView
+                android:id="@+id/modelR2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="R²: N/A"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/modelMAE"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MAE: N/A"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/modelRMSE"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="RMSE: N/A"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <!-- Reset and View Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Reset" />
+
+            <Button
+                android:id="@+id/resetAllPortfoliosButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="All"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/resetPortfolioButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Alpaca" />
+
+            <Button
+                android:id="@+id/resetControlButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Control" />
+        </LinearLayout>
+
+        <!-- View Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="View" />
+
+            <Button
+                android:id="@+id/dailyPerformaceBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Daily Changes" />
+
+            <Button
+                android:id="@+id/openPortfolioAllActivityButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Portfolio Data"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- Frequency Input -->
+        <EditText
+            android:id="@+id/frequencyInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter update frequency or type &quot;sell all&quot; "
             android:visibility="gone" />
 
-        <Button
-            android:id="@+id/resetPortfolioButton"
-            android:layout_width="wrap_content"
+        <!-- Update Frequency and Refresh Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Alpaca" />
+            android:orientation="horizontal"
+            android:padding="8dp">
 
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <Button
+                android:id="@+id/updateFrequencyButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Update Frequency"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/fetchPortfolioButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Refresh" />
+        </LinearLayout>
+
+        <!-- Command Spinner -->
+        <Spinner
+            android:id="@+id/commandSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:spinnerMode="dropdown" />
+
+        <!-- Send Command Button -->
         <Button
-            android:id="@+id/resetControlButton"
+            android:id="@+id/sendCommandButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Control" />
+            android:layout_gravity="right"
+            android:layout_margin="16dp"
+            android:text="Send Command" />
+
+        <!-- Progress Bar -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
     </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/textView2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="View" />
-
-        <Button
-            android:id="@+id/dailyPerformaceBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Daily Changes" />
-
-        <Button
-            android:id="@+id/openPortfolioAllActivityButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Portfolio Data"
-            android:visibility="gone" />
-    </LinearLayout>
-
-    <EditText
-        android:id="@+id/frequencyInput"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Enter update frequency or type &quot;sell all&quot; "
-        android:visibility="gone" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/textView3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1" />
-
-        <Button
-            android:id="@+id/updateFrequencyButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Update Frequency"
-            android:visibility="gone" />
-
-        <Button
-            android:id="@+id/fetchPortfolioButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Refresh" />
-    </LinearLayout>
-
-    <!-- Add this inside your existing layout, e.g., LinearLayout or ConstraintLayout -->
-    <Spinner
-        android:id="@+id/commandSpinner"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:spinnerMode="dropdown" />
-
-    <!-- Optionally, add a button to send the selected command -->
-    <Button
-        android:id="@+id/sendCommandButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right"
-        android:layout_marginTop="8dp"
-        android:text="Send Command" />
-
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-</LinearLayout>
+</ScrollView>
