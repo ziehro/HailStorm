@@ -43,9 +43,9 @@ public class MainActivity extends AppCompatActivity {
 
     private Button updateFrequencyButton, resetControlPortfolio, fetchPortfolioButton, dailyPerformanceBtn, openPortfolioAllButton;
 
-    private TextView modelR2, modelMAE, modelRMSE, modelAccuracy; // Added TextViews for model metrics
+    private TextView modelR2, modelMAE, modelRMSE, modelAccuracy, controlPortfolioTotalValue; // Added TextViews for model metrics
 
-    private TextView alpacaEquity, alpacaHoldings; // Added TextViews for Alpaca data
+    private TextView alpacaEquity, alpacaHoldings, alpacaDailyChange; // Added alpacaDailyChange
 
     private OkHttpClient client = new OkHttpClient();
     private Gson gson = new Gson();
@@ -74,6 +74,8 @@ public class MainActivity extends AppCompatActivity {
         frequencyInput = findViewById(R.id.frequencyInput);
         progressBar = findViewById(R.id.progressBar);
 
+        controlPortfolioTotalValue = findViewById(R.id.controlPortfolioTotalValue);
+
         modelR2 = findViewById(R.id.modelR2);
         modelMAE = findViewById(R.id.modelMAE);
         modelRMSE = findViewById(R.id.modelRMSE);
@@ -81,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
 
         alpacaEquity = findViewById(R.id.alpacaEquity);
         alpacaHoldings = findViewById(R.id.alpacaHoldings);
+        alpacaDailyChange = findViewById(R.id.alpacaDailyChange); // Initialize alpacaDailyChange
 
         updateFrequencyButton = findViewById(R.id.updateFrequencyButton);
         resetControlPortfolio = findViewById(R.id.resetControlButton);
@@ -97,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         commandSpinner.setAdapter(adapter);
     }
+
 
     private void initListeners() {
         updateFrequencyButton.setOnClickListener(v -> updateFrequency());
@@ -186,6 +190,7 @@ public class MainActivity extends AppCompatActivity {
         fetchAlpacaAccount();
         fetchModelMetrics();
         fetchModelAccuracy();
+        fetchControlPortfolio();
     }
 
 
@@ -257,6 +262,9 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Fetches Alpaca account data including equity.
      */
+    /**
+     * Fetches Alpaca account data including equity and daily change.
+     */
     private void fetchAlpacaAccount() {
         String url = "https://paper-api.alpaca.markets/v2/account";
 
@@ -285,9 +293,26 @@ public class MainActivity extends AppCompatActivity {
                     JsonObject account = gson.fromJson(responseBody, JsonObject.class);
                     double equity = account.get("equity").getAsDouble();
 
+                    // Extract daily change. Adjust the field name based on Alpaca's API response.
+                    double dailyChange = account.has("change_today") ? account.get("change_today").getAsDouble() : 0.0;
+
                     runOnUiThread(() -> {
                         alpacaEquity.setText(String.format("Alpaca Equity: $%.2f", equity));
-                        alpacaEquity.setTextColor(Color.YELLOW); // Set text color to yellow
+                        alpacaEquity.setTextColor(Color.YELLOW);
+
+                        // Update daily change TextView
+                        alpacaDailyChange.setText(String.format("Daily Change: $%.2f", dailyChange));
+
+                        // Set color based on daily change value
+                        if (dailyChange < 0) {
+                            alpacaDailyChange.setTextColor(Color.RED);
+                        } else {
+                            alpacaDailyChange.setTextColor(Color.GREEN);
+                        }
+
+                        // Optional: You can also display percentage change
+                        // double percentageChange = account.has("change_today_percent") ? account.get("change_today_percent").getAsDouble() : 0.0;
+                        // alpacaDailyChange.setText(String.format("Daily Change: $%.2f (%.2f%%)", dailyChange, percentageChange));
 
                         fetchAlpacaHoldings(); // Fetch holdings after fetching equity
                     });
@@ -301,6 +326,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
 
 
     private void fetchAlpacaHoldings() {
@@ -388,7 +414,7 @@ public class MainActivity extends AppCompatActivity {
                             modelR2.setText(String.format("R²: %.2f", r2 != null ? r2 : 0.0));
                             modelMAE.setText(String.format("MAE: %.2f", mae != null ? mae : 0.0));
                             modelRMSE.setText(String.format("RMSE: %.2f", mae != null ? mae : 0.0));
-                            modelAccuracy.setText(String.format("Model Accuracy: %.2f%%", calculateModelAccuracy(rmse, mae)));
+                            //modelAccuracy.setText(String.format("Model Accuracy: %.2f%%", calculateModelAccuracy(rmse, mae)));
                         });
                     } else {
                         runOnUiThread(() -> {
@@ -405,6 +431,7 @@ public class MainActivity extends AppCompatActivity {
                     });
                     Log.e("Firestore", "Error fetching model metrics", e);
                 });
+        fetchModelAccuracy();
     }
 
     /**
@@ -419,12 +446,7 @@ public class MainActivity extends AppCompatActivity {
         return Math.max(accuracy, 0.0); // Ensure accuracy isn't negative
     }
 
-    /**
-     * Fetches prediction data from Firestore and calculates model accuracy.
-     */
-    /**
-     * Fetches model accuracy from the 'predictions/GOOG/metrics/latest' document in Firestore and displays it.
-     */
+
     private void fetchModelAccuracy() {
         // Reference to the 'predictions/GOOG/metrics/latest' document
         DocumentReference metricsRef = db.collection("predictions")
@@ -460,6 +482,139 @@ public class MainActivity extends AppCompatActivity {
                     Log.e("Firestore", "Error fetching model accuracy from 'predictions/GOOG/metrics/latest'", e);
                 });
     }
+
+    /**
+     * Fetches the Control Portfolio from Firestore, retrieves current prices from Alpaca API,
+     * calculates the total value, and updates the UI.
+     */
+    private void fetchControlPortfolio() {
+        // Reference to the 'Control' collection and 'latest' document
+        DocumentReference controlRef = db.collection("Control").document("latest");
+
+        controlRef.get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        // Retrieve the holdings map
+                        Map<String, Object> holdingsMap = (Map<String, Object>) documentSnapshot.get("holdings");
+
+                        if (holdingsMap != null && !holdingsMap.isEmpty()) {
+                            // Initialize a holder for total value
+                            final double[] totalValue = {0.0};
+                            final int[] processedTickers = {0};
+                            int totalTickers = holdingsMap.size();
+
+                            // Iterate through each ticker in holdings
+                            for (Map.Entry<String, Object> entry : holdingsMap.entrySet()) {
+                                String ticker = entry.getKey();
+                                Map<String, Object> stockInfo = (Map<String, Object>) entry.getValue();
+                                Double shares = stockInfo.get("shares") instanceof Number ? ((Number) stockInfo.get("shares")).doubleValue() : 0.0;
+
+                                // Fetch current price for the ticker
+                                fetchCurrentPrice(ticker, new PriceCallback() {
+                                    @Override
+                                    public void onPriceFetched(double currentPrice) {
+                                        // Calculate value for this ticker
+                                        double tickerValue = shares * currentPrice;
+                                        totalValue[0] += tickerValue;
+
+                                        // Increment processed tickers
+                                        processedTickers[0]++;
+
+                                        // If all tickers are processed, update the UI
+                                        if (processedTickers[0] == totalTickers) {
+                                            runOnUiThread(() -> {
+                                                controlPortfolioTotalValue.setText(String.format("Control Portfolio Total Value: $%.2f", totalValue[0]));
+                                            });
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onPriceFetchFailed(String errorMessage) {
+                                        // Handle price fetch failure
+                                        runOnUiThread(() -> {
+                                            Toast.makeText(MainActivity.this, "Failed to fetch price for " + ticker, Toast.LENGTH_SHORT).show();
+                                        });
+                                        Log.e("AlpacaAPI", "Failed to fetch price for " + ticker + ": " + errorMessage);
+
+                                        // Even if one ticker fails, continue processing others
+                                        processedTickers[0]++;
+                                        if (processedTickers[0] == totalTickers) {
+                                            runOnUiThread(() -> {
+                                                controlPortfolioTotalValue.setText(String.format("Control Portfolio Total Value: $%.2f", totalValue[0]));
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        } else {
+                            // No holdings found
+                            runOnUiThread(() -> {
+                                controlPortfolioTotalValue.setText("Control Portfolio Total Value: $0.00");
+                                Toast.makeText(MainActivity.this, "No holdings found in Control Portfolio.", Toast.LENGTH_SHORT).show();
+                                progressBar.setVisibility(View.GONE);
+                            });
+                            Log.w("Firestore", "No holdings found in Control Portfolio.");
+                        }
+                    } else {
+                        // Control Portfolio document does not exist
+                        runOnUiThread(() -> {
+                            controlPortfolioTotalValue.setText("Control Portfolio Total Value: $0.00");
+                            Toast.makeText(MainActivity.this, "Control Portfolio does not exist.", Toast.LENGTH_SHORT).show();
+                            progressBar.setVisibility(View.GONE);
+                        });
+                        Log.w("Firestore", "Control Portfolio document does not exist.");
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    // Handle Firestore fetch failure
+                    runOnUiThread(() -> {
+                        Toast.makeText(MainActivity.this, "Failed to fetch Control Portfolio.", Toast.LENGTH_SHORT).show();
+                        progressBar.setVisibility(View.GONE);
+                    });
+                    Log.e("Firestore", "Error fetching Control Portfolio", e);
+                });
+    }
+
+    /**
+     * Callback interface for fetching current price.
+     */
+    private interface PriceCallback {
+        void onPriceFetched(double currentPrice);
+        void onPriceFetchFailed(String errorMessage);
+    }
+
+    /**
+     * Fetches the current price for a given ticker from Firestore.
+     *
+     * @param ticker The stock ticker symbol.
+     * @param callback The callback to handle the fetched price or failure.
+     */
+    private void fetchCurrentPrice(String ticker, PriceCallback callback) {
+        DocumentReference docRef = db.collection("predictions").document(ticker);
+        docRef.get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        Double currentPrice = documentSnapshot.getDouble("current_price");
+                        if (currentPrice != null && currentPrice > 0) {
+                            callback.onPriceFetched(currentPrice);
+                        } else {
+                            callback.onPriceFetchFailed("Invalid current price for " + ticker + ".");
+                            Log.e("Firestore", "Invalid current price for " + ticker + ".");
+                        }
+                    } else {
+                        callback.onPriceFetchFailed(ticker + " document does not exist in predictions.");
+                        Log.e("Firestore", ticker + " document does not exist in predictions.");
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    callback.onPriceFetchFailed("Error fetching current price for " + ticker + ".");
+                    Log.e("Firestore", "Error fetching current price for " + ticker, e);
+                });
+    }
+
+
+
+
 
 
 }

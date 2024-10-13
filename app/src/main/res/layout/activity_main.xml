@@ -34,9 +34,20 @@
             android:id="@+id/alpacaEquity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="8dp"
+            android:padding="16dp"
             android:text="Alpaca Equity: $0.00"
             android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <!-- New Daily Change TextView -->
+        <TextView
+            android:id="@+id/alpacaDailyChange"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="16dp"
+            android:paddingBottom="16dp"
+            android:text="Daily Change: $0.00"
+            android:textSize="16sp"
             android:textStyle="bold" />
 
         <!-- Alpaca Holdings -->

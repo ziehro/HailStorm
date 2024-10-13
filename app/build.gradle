@@ -19,8 +19,8 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField "String", "ALPACA_API_KEY_ID", "\"PKBI8IH6I4M8Z3GA4CX6\""
-        buildConfigField "String", "ALPACA_SECRET_KEY", "\"Kn4vpbgIrA99bQmuc40o7ENvT4ymG9NiJFB7nszU\""
+        buildConfigField "String", "ALPACA_API_KEY_ID", "\"PKV7KQ8MNZXOO055EIGM\""
+        buildConfigField "String", "ALPACA_SECRET_KEY", "\"L6648RHLgUNhv9rxbnSxAqyzEgsJTWzyrxA8yzG0\""
 
     }
 
