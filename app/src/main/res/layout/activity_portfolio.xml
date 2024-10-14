@@ -26,8 +26,7 @@
         <com.github.mikephil.charting.charts.BarChart
             android:id="@+id/barChartDailyChanges"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:layout_marginBottom="24dp"
+            android:layout_height="180dp"
             android:background="@android:color/black" />
 
         <!-- Second BarChart: Google Stock Change Percentage -->
@@ -35,7 +34,6 @@
             android:id="@+id/googleChangeTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
             android:text="Google Stock Change (%)"
             android:textColor="@android:color/white"
             android:textSize="18sp"
@@ -44,28 +42,20 @@
         <com.github.mikephil.charting.charts.BarChart
             android:id="@+id/barChartGoogleChange"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
+            android:layout_height="180dp"
             android:layout_marginBottom="24dp"
-            android:background="@android:color/black" />
+            android:background="@android:color/black" >
 
-        <com.github.mikephil.charting.charts.BarChart
-            android:id="@+id/barChartAccuracy"
-            android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:layout_marginTop="16dp" />
+        </com.github.mikephil.charting.charts.BarChart>
 
-        <!-- New LineChart: Predicted vs Actual Stock Prices -->
         <TextView
-            android:id="@+id/priceComparisonTitle"
+            android:id="@+id/textView4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="Predicted vs Actual Prices"
+            android:text="Daily Accuracies"
             android:textColor="@android:color/white"
             android:textSize="18sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
-
+            android:textStyle="bold"/>
 
 
         <com.github.mikephil.charting.charts.LineChart

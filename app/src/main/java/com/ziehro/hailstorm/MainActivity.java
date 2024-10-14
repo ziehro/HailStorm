@@ -367,8 +367,8 @@ public class MainActivity extends AppCompatActivity {
                             double marketValue = holding.get("market_value").getAsDouble();
 
                             holdingsBuilder.append(String.format(
-                                    "%s: %.2f shares @ $%.2f each ($%.2f)\n",
-                                    symbol, qty, currentPrice, marketValue
+                                    "%d shares @ $%.2f \n",
+                                     qty, currentPrice
                             ));
                         }
                     } else {
@@ -397,7 +397,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void fetchModelMetrics() {
         // Reference to the 'model_evaluations' collection
-        db.collection("model_evaluations").document("portfolio1").collection("tickers")
+        db.collection("model_evaluations")
                 .orderBy("__name__") // Order by document ID (date)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {

@@ -1,5 +1,6 @@
 package com.ziehro.hailstorm;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.graphics.Color;
@@ -24,6 +25,8 @@ import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -35,6 +38,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -49,7 +53,7 @@ public class PortfolioActivity extends AppCompatActivity {
 
     private BarChart barChartDailyChanges; // First BarChart
     private BarChart barChartGoogleChange; // Second BarChart
-    private LineChart lineChartPredictedVsActual;
+    private LineChart lineChart;
     private BarChart barChartAccuracy;
 
 
@@ -63,11 +67,10 @@ public class PortfolioActivity extends AppCompatActivity {
 
         // Initialize Views
         progressBar = findViewById(R.id.progressBar);
-        predictionsView = findViewById(R.id.predictionsView); // Initialize if present in XML
+
         barChartDailyChanges = findViewById(R.id.barChartDailyChanges); // Initialize first BarChart
         barChartGoogleChange = findViewById(R.id.barChartGoogleChange); // Initialize second BarChart
-        lineChartPredictedVsActual = findViewById(R.id.lineChartPredictedVsActual);
-        barChartAccuracy = findViewById(R.id.barChartAccuracy);
+        lineChart = findViewById(R.id.lineChartPredictedVsActual); // Initialize LineChart
 
         // Fetch and display accuracy data
         fetchAndDisplayAccuracyData();
@@ -75,14 +78,137 @@ public class PortfolioActivity extends AppCompatActivity {
         // Fetch data on activity start
         fetchDailyChanges();
         fetchPredictions(); // Optional: Fetch predictions if you have predictionsView
-        fetchPredictionVsActualData();
+        displayDailyAccuracies();
 
     }
 
+    private class DailyAccuracy {
+        private String date;
+        private Double accuracy;
+
+        public DailyAccuracy(String date, Double accuracy) {
+            this.date = date;
+            this.accuracy = accuracy;
+        }
+
+        public String getDate() {
+            return date;
+        }
+
+        public Double getAccuracy() {
+            return accuracy;
+        }
+    }
+
     /**
-     * Fetch predictions data from Firestore and update the UI.
-     * Optional: Remove if not needed.
+     * Fetches daily accuracies from Firestore and displays them in the LineChart.
      */
+    private void displayDailyAccuracies() {
+        // Reference to the 'daily_accuracies' collection
+        FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+        firestore.collection("daily_accuracies")
+                .orderBy("date") // Ensure data is ordered by date
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            List<DailyAccuracy> dailyAccuracyList = new ArrayList<>();
+
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                String dateStr = document.getString("date");
+                                Double accuracy = document.getDouble("accuracy");
+
+                                if (dateStr != null && accuracy != null) {
+                                    dailyAccuracyList.add(new DailyAccuracy(dateStr, accuracy));
+                                }
+                            }
+
+                            // Check if data exists
+                            if (dailyAccuracyList.isEmpty()) {
+                                Log.w("Firestore", "No daily accuracy data found.");
+                                // Optionally, display a message to the user
+                                lineChart.setVisibility(View.GONE);
+                                // You can also show a TextView indicating no data
+                                return;
+                            }
+
+                            // Sort the list by date in ascending order
+                            Collections.sort(dailyAccuracyList, new Comparator<DailyAccuracy>() {
+                                @Override
+                                public int compare(DailyAccuracy o1, DailyAccuracy o2) {
+                                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                                    try {
+                                        Date d1 = sdf.parse(o1.getDate());
+                                        Date d2 = sdf.parse(o2.getDate());
+                                        return d1.compareTo(d2);
+                                    } catch (ParseException e) {
+                                        e.printStackTrace();
+                                        return 0;
+                                    }
+                                }
+                            });
+
+                            // Prepare entries for the chart
+                            List<Entry> entries = new ArrayList<>();
+                            final List<String> dates = new ArrayList<>(); // For X-Axis labels
+                            int index = 0;
+                            for (DailyAccuracy da : dailyAccuracyList) {
+                                entries.add(new Entry(index, da.getAccuracy().floatValue()));
+                                dates.add(da.getDate());
+                                index++;
+                            }
+
+                            // Create LineDataSet
+                            LineDataSet dataSet = new LineDataSet(entries, "Daily Accuracy (%)");
+                            dataSet.setColor(getResources().getColor(R.color.teal_200)); // Set your desired color
+                            dataSet.setLineWidth(2f);
+                            dataSet.setCircleRadius(4f);
+                            dataSet.setDrawValues(false); // Hide values on the chart
+                            dataSet.setDrawCircles(true);
+
+                            // Create LineData
+                            LineData lineData = new LineData(dataSet);
+                            lineChart.setData(lineData);
+
+                            // Configure X-Axis
+                            XAxis xAxis = lineChart.getXAxis();
+                            xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+                            xAxis.setGranularity(1f);
+                            xAxis.setDrawGridLines(false);
+                            xAxis.setValueFormatter(new com.github.mikephil.charting.formatter.IndexAxisValueFormatter(dates));
+                            xAxis.setLabelRotationAngle(-45f); // Rotate labels if dates overlap
+
+                            // Configure Y-Axis
+                            YAxis leftAxis = lineChart.getAxisLeft();
+                            leftAxis.setAxisMinimum(0f); // Minimum accuracy
+                            leftAxis.setAxisMaximum(100f); // Maximum accuracy
+                            YAxis rightAxis = lineChart.getAxisRight();
+                            rightAxis.setEnabled(false); // Disable right Y-Axis
+
+                            // Configure Description
+                            Description description = new Description();
+                            description.setText("Daily Model Accuracies");
+                            description.setTextColor(getResources().getColor(R.color.white));
+                            lineChart.setDescription(description);
+
+                            // Additional Chart Configurations
+                            lineChart.getLegend().setEnabled(true);
+                            lineChart.getDescription().setEnabled(true);
+                            lineChart.animateX(1000); // Animation
+
+                            // Refresh the chart
+                            lineChart.invalidate();
+
+                            // Make the chart visible
+                            lineChart.setVisibility(View.VISIBLE);
+
+                        } else {
+                            Log.w("Firestore", "Error getting documents.", task.getException());
+                        }
+                    }
+                });
+    }
     private void fetchPredictions() {
         db.collection("predictions").document("latest")
                 .addSnapshotListener((documentSnapshot, e) -> {
@@ -347,100 +473,8 @@ public class PortfolioActivity extends AppCompatActivity {
         barChartGoogleChange.animateY(1000);
     }
 
-    private void displayPredictionVsActualChart(List<Entry> predictedEntries, List<Entry> actualEntries, List<String> labels) {
-        if (predictedEntries.isEmpty() || actualEntries.isEmpty()) {
-            Toast.makeText(this, "No prediction or actual data available.", Toast.LENGTH_SHORT).show();
-            return;
-        }
 
-        // Create DataSets for predicted and actual prices
-        LineDataSet predictedDataSet = new LineDataSet(predictedEntries, "Predicted Prices");
-        predictedDataSet.setColor(Color.BLUE);
-        predictedDataSet.setValueTextColor(Color.WHITE);
-        predictedDataSet.setLineWidth(2f);
-        predictedDataSet.setCircleColor(Color.BLUE);
-        predictedDataSet.setDrawCircles(true);
-        predictedDataSet.setDrawValues(false);
 
-        LineDataSet actualDataSet = new LineDataSet(actualEntries, "Actual Prices");
-        actualDataSet.setColor(Color.GREEN);
-        actualDataSet.setValueTextColor(Color.WHITE);
-        actualDataSet.setLineWidth(2f);
-        actualDataSet.setCircleColor(Color.GREEN);
-        actualDataSet.setDrawCircles(true);
-        actualDataSet.setDrawValues(false);
-
-        // Create LineData
-        LineData lineData = new LineData(predictedDataSet, actualDataSet);
-        lineChartPredictedVsActual.setData(lineData);
-        lineChartPredictedVsActual.invalidate(); // Refresh chart
-
-        // Customize X-axis labels
-        XAxis xAxis = lineChartPredictedVsActual.getXAxis();
-        xAxis.setValueFormatter(new IndexAxisValueFormatter(labels)); // Use formatted labels
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        xAxis.setGranularity(1f);
-        xAxis.setGranularityEnabled(true);
-        xAxis.setTextColor(Color.WHITE);
-        xAxis.setTextSize(12f);
-
-        // Customize Y-axis labels
-        YAxis leftAxis = lineChartPredictedVsActual.getAxisLeft();
-        leftAxis.setTextColor(Color.WHITE);
-        leftAxis.setTextSize(12f);
-
-        // Disable right Y-axis
-        lineChartPredictedVsActual.getAxisRight().setEnabled(false);
-
-        // Enable touch gestures
-        lineChartPredictedVsActual.setTouchEnabled(true);
-        lineChartPredictedVsActual.setDragEnabled(true);
-        lineChartPredictedVsActual.setScaleEnabled(true);
-
-        // Animate the chart
-        lineChartPredictedVsActual.animateY(1000);
-    }
-    private void fetchPredictionVsActualData() {
-        String portfolio = "portfolio1"; // Replace with dynamic portfolio if needed
-        String ticker = "GOOG"; // Replace with dynamic ticker if needed
-
-        db.collection("predictions")
-                .document(portfolio)
-                .collection("tickers")
-                .whereEqualTo("ticker", ticker) // Ensure you're filtering for the correct ticker
-                .orderBy("timestamp")
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    List<Entry> predictedEntries = new ArrayList<>();
-                    List<Entry> actualEntries = new ArrayList<>();
-                    List<String> labels = new ArrayList<>();
-                    float index = 0f;
-
-                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                        Double predictedPrice = document.getDouble("predicted_price");
-                        Double actualPrice = document.getDouble("actual_price");
-                        String timestamp = document.getString("timestamp");
-
-                        if (predictedPrice != null && actualPrice != null && timestamp != null) {
-                            predictedEntries.add(new Entry(index, predictedPrice.floatValue()));
-                            actualEntries.add(new Entry(index, actualPrice.floatValue()));
-                            labels.add(formatDateLabel(timestamp)); // Format the timestamp for X-axis labels
-                            index += 1f;
-                        }
-                    }
-
-                    if (predictedEntries.isEmpty() || actualEntries.isEmpty()) {
-                        Toast.makeText(this, "No prediction or actual data available.", Toast.LENGTH_SHORT).show();
-                    } else {
-                        // Display data on the chart
-                        displayPredictionVsActualChart(predictedEntries, actualEntries, labels);
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("PortfolioActivity", "Error fetching prediction vs actual data", e);
-                    Toast.makeText(this, "Error fetching data", Toast.LENGTH_SHORT).show();
-                });
-    }
 
     private void fetchAndDisplayAccuracyData() {
         String portfolio = "portfolio1"; // Replace with dynamic portfolio if needed
