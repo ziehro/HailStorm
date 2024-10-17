@@ -291,30 +291,40 @@ public class MainActivity extends AppCompatActivity {
                 if (response.isSuccessful()) {
                     String responseBody = response.body().string();
                     JsonObject account = gson.fromJson(responseBody, JsonObject.class);
-                    double equity = account.get("equity").getAsDouble();
 
-                    // Extract daily change. Adjust the field name based on Alpaca's API response.
-                    double dailyChange = account.has("change_today") ? account.get("change_today").getAsDouble() : 0.0;
+                    // Extract 'equity' and 'last_equity' from the response
+                    double equity = account.has("equity") ? account.get("equity").getAsDouble() : 0.0;
+                    double lastEquity = account.has("last_equity") ? account.get("last_equity").getAsDouble() : equity; // Default to current equity if last_equity is missing
+
+                    // Calculate daily change
+                    double dailyChange = equity - lastEquity;
 
                     runOnUiThread(() -> {
+                        // Update Equity TextView
                         alpacaEquity.setText(String.format("Alpaca Equity: $%.2f", equity));
                         alpacaEquity.setTextColor(Color.YELLOW);
 
-                        // Update daily change TextView
+                        // Update Daily Change TextView
                         alpacaDailyChange.setText(String.format("Daily Change: $%.2f", dailyChange));
 
                         // Set color based on daily change value
                         if (dailyChange < 0) {
                             alpacaDailyChange.setTextColor(Color.RED);
-                        } else {
+                        } else if (dailyChange > 0) {
                             alpacaDailyChange.setTextColor(Color.GREEN);
+                        } else {
+                            alpacaDailyChange.setTextColor(Color.GRAY); // Neutral color for no change
                         }
 
-                        // Optional: You can also display percentage change
-                        // double percentageChange = account.has("change_today_percent") ? account.get("change_today_percent").getAsDouble() : 0.0;
-                        // alpacaDailyChange.setText(String.format("Daily Change: $%.2f (%.2f%%)", dailyChange, percentageChange));
+                        // Optional: Display percentage change
+                        double percentageChange = lastEquity != 0 ? (dailyChange / lastEquity) * 100 : 0.0;
+                        alpacaDailyChange.setText(String.format("Daily Change: $%.2f (%.2f%%)", dailyChange, percentageChange));
 
-                        fetchAlpacaHoldings(); // Fetch holdings after fetching equity
+                        // Fetch holdings after fetching equity
+                        fetchAlpacaHoldings();
+
+                        // Hide progress bar if it's visible
+                        progressBar.setVisibility(View.GONE);
                     });
                 } else {
                     runOnUiThread(() -> {
@@ -324,6 +334,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.e("AlpacaAPI", "Unsuccessful response: " + response.code());
                 }
             }
+
         });
     }
 
@@ -365,9 +376,10 @@ public class MainActivity extends AppCompatActivity {
                             double avgEntryPrice = holding.get("avg_entry_price").getAsDouble();
                             double currentPrice = holding.get("current_price").getAsDouble();
                             double marketValue = holding.get("market_value").getAsDouble();
+                            double changeToday = holding.get("change_today").getAsDouble(); // New line
 
                             holdingsBuilder.append(String.format(
-                                    "%d shares @ $%.2f \n",
+                                    "%.1f shares @ $%.2f \n",
                                      qty, currentPrice
                             ));
                         }
@@ -413,7 +425,7 @@ public class MainActivity extends AppCompatActivity {
                         runOnUiThread(() -> {
                             modelR2.setText(String.format("R²: %.2f", r2 != null ? r2 : 0.0));
                             modelMAE.setText(String.format("MAE: %.2f", mae != null ? mae : 0.0));
-                            modelRMSE.setText(String.format("RMSE: %.2f", mae != null ? mae : 0.0));
+                            modelRMSE.setText(String.format("RMSE: %.2f", mae != null ? rmse : 0.0));
                             //modelAccuracy.setText(String.format("Model Accuracy: %.2f%%", calculateModelAccuracy(rmse, mae)));
                         });
                     } else {
