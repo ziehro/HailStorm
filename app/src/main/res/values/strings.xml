@@ -11,6 +11,7 @@
         <item>Update Accuracies</item>
         <item>Update Model</item>
         <item>Check Alpaca</item>
+        <item>Predict Day</item>
     </string-array>
 
 </resources>
