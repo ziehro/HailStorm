@@ -27,51 +27,108 @@
             android:padding="8dp"
             android:text="Control Portfolio Total Value: $0.00"
             android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:visibility="gone" />
 
         <!-- Alpaca Account Equity -->
-        <TextView
-            android:id="@+id/alpacaEquity"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:text="Alpaca Equity: $0.00"
-            android:textSize="18sp"
-            android:textStyle="bold" />
 
         <!-- New Daily Change TextView -->
-        <TextView
-            android:id="@+id/alpacaDailyChange"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingLeft="16dp"
-            android:paddingBottom="16dp"
-            android:text="Daily Change: $0.00"
-            android:textSize="16sp"
-            android:textStyle="bold" />
 
         <!-- Alpaca Holdings -->
-        <TextView
-            android:id="@+id/alpacaHoldings"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:text="Alpaca Holdings: "
-            android:textSize="16sp" />
 
         <!-- Portfolio 0 (Assuming it's Alpaca or another portfolio) -->
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="8dp">
 
-            <View
-                android:id="@+id/portfolio0ColorBox"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_marginRight="8dp"
-                android:background="#D3D3D3" />
+            <TextView
+                android:id="@+id/alpacaEquity"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:padding="16dp"
+                android:text="Alpaca Equity: $0.00"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/alpacaEquityClass"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:padding="16dp"
+                android:text="Alpaca Equity: $0.00"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/alpacaDailyChange"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:paddingLeft="16dp"
+                android:paddingBottom="16dp"
+                android:text="Daily Change: $0.00"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/alpacaDailyChangeClass"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:paddingLeft="16dp"
+                android:paddingBottom="16dp"
+                android:text="Daily Change: $0.00"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/alpacaHoldings"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:padding="8dp"
+                android:text="Alpaca Holdings: "
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/alpacaHoldingsClass"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:text="Alpaca Holdings: "
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <TextView
+                android:id="@+id/modelAccuracy2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Accuracy: N/A"
+                android:textSize="16sp" />
 
             <TextView
                 android:id="@+id/modelAccuracy"
@@ -88,62 +145,64 @@
             android:orientation="vertical"
             android:padding="8dp">
 
-            <TextView
-                android:id="@+id/modelR2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="R²: N/A"
-                android:textSize="16sp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/modelMAE"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="MAE: N/A"
-                android:textSize="16sp" />
+                <TextView
+                    android:id="@+id/modelR2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="R²: N/A"
+                    android:textSize="16sp" />
 
-            <TextView
-                android:id="@+id/modelRMSE"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="RMSE: N/A"
-                android:textSize="16sp" />
+                <TextView
+                    android:id="@+id/modelAcc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ACC: N/A"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/modelMAE"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="MAE: N/A"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/modelF1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="F1: N/A"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/modelRMSE"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="RMSE: N/A"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
         </LinearLayout>
 
         <!-- Reset and View Buttons -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="8dp">
-
-            <TextView
-                android:id="@+id/textView"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="Reset" />
-
-            <Button
-                android:id="@+id/resetAllPortfoliosButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="All"
-                android:visibility="gone" />
-
-            <Button
-                android:id="@+id/resetPortfolioButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Alpaca" />
-
-            <Button
-                android:id="@+id/resetControlButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Control" />
-        </LinearLayout>
 
         <!-- View Buttons -->
         <LinearLayout

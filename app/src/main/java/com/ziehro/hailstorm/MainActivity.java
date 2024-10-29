@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView modelR2, modelMAE, modelRMSE, modelAccuracy, controlPortfolioTotalValue; // Added TextViews for model metrics
 
     private TextView alpacaEquity, alpacaHoldings, alpacaDailyChange; // Added alpacaDailyChange
+    private TextView alpacaEquityClass, alpacaHoldingsClass, alpacaDailyChangeClass; // Added alpacaDailyChange
 
     private OkHttpClient client = new OkHttpClient();
     private Gson gson = new Gson();
@@ -68,6 +69,9 @@ public class MainActivity extends AppCompatActivity {
     String API_KEY_ID = BuildConfig.ALPACA_API_KEY_ID;
     String SECRET_KEY = BuildConfig.ALPACA_SECRET_KEY;
 
+    String API_KEY_ID_CLASS = BuildConfig.ALPACA_API_KEY_ID_CLASS;
+    String SECRET_KEY_CLASS = BuildConfig.ALPACA_SECRET_KEY_CLASS;
+
     private void initViews() {
         db = FirebaseFirestore.getInstance();
 
@@ -85,6 +89,10 @@ public class MainActivity extends AppCompatActivity {
         alpacaHoldings = findViewById(R.id.alpacaHoldings);
         alpacaDailyChange = findViewById(R.id.alpacaDailyChange); // Initialize alpacaDailyChange
 
+        alpacaEquityClass = findViewById(R.id.alpacaEquityClass);
+        alpacaHoldingsClass = findViewById(R.id.alpacaHoldingsClass);
+        alpacaDailyChangeClass = findViewById(R.id.alpacaDailyChangeClass); // Initialize alpacaDailyChange
+
         updateFrequencyButton = findViewById(R.id.updateFrequencyButton);
         resetControlPortfolio = findViewById(R.id.resetControlButton);
         fetchPortfolioButton = findViewById(R.id.fetchPortfolioButton);
@@ -100,17 +108,14 @@ public class MainActivity extends AppCompatActivity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         commandSpinner.setAdapter(adapter);
     }
-
-
     private void initListeners() {
         updateFrequencyButton.setOnClickListener(v -> updateFrequency());
-        resetControlPortfolio.setOnClickListener(v -> showConfirmationDialog("Are you sure you want to reset the control portfolio?", () -> createControlPortfolio(v)));
+        //resetControlPortfolio.setOnClickListener(v -> showConfirmationDialog("Are you sure you want to reset the control portfolio?", () -> createControlPortfolio(v)));
         fetchPortfolioButton.setOnClickListener(v -> fetchPortfolio());
         dailyPerformanceBtn.setOnClickListener(v -> openPortfolioActivity());
         openPortfolioAllButton.setOnClickListener(v -> openPortfolioAllActivity());
         sendCommandButton.setOnClickListener(v -> sendSelectedCommand());
     }
-
     private void showConfirmationDialog(String message, Runnable onConfirm) {
         new AlertDialog.Builder(this)
                 .setMessage(message)
@@ -118,7 +123,6 @@ public class MainActivity extends AppCompatActivity {
                 .setNegativeButton("No", null)
                 .show();
     }
-
     private void sendSelectedCommand() {
         String selectedCommand = commandSpinner.getSelectedItem().toString();
 
@@ -147,7 +151,6 @@ public class MainActivity extends AppCompatActivity {
                     Log.w("MainActivity", "Error adding command", e);
                 });
     }
-
     private void updateFrequency() {
         String frequency = frequencyInput.getText().toString().trim();
         if (frequency.isEmpty()) {
@@ -174,26 +177,22 @@ public class MainActivity extends AppCompatActivity {
                     progressBar.setVisibility(View.GONE);
                 });
     }
-
     private void openPortfolioActivity() {
         Intent intent = new Intent(MainActivity.this, PortfolioActivity.class);
         startActivity(intent);
     }
-
     private void openPortfolioAllActivity() {
         Intent intent = new Intent(MainActivity.this, PortfolioActivityAll.class);
         startActivity(intent);
     }
-
     private void fetchPortfolio() {
         progressBar.setVisibility(View.VISIBLE);
         fetchAlpacaAccount();
+        fetchAlpacaAccountClass();
         fetchModelMetrics();
         fetchModelAccuracy();
         fetchControlPortfolio();
     }
-
-
     public void createControlPortfolio(View view) {
         db.collection("predictions").document("GOOG")
                 .get()
@@ -214,11 +213,6 @@ public class MainActivity extends AppCompatActivity {
                     Log.e("TAG", "Error fetching current price from predictions", e);
                 });
     }
-
-    /**
-     * Sets up the control portfolio by investing as much as possible based on the current stock price.
-     * @param currentPrice The current price of the stock.
-     */
     private void setupControlPortfolio(double currentPrice) {
         String[] tickers = {"GOOG"};
 
@@ -258,13 +252,78 @@ public class MainActivity extends AppCompatActivity {
                     Log.e("TAG", "Error creating control portfolio", e);
                 });
     }
+    private void fetchAlpacaAccountClass() {
+        String url = "https://paper-api.alpaca.markets/v2/account";
 
-    /**
-     * Fetches Alpaca account data including equity.
-     */
-    /**
-     * Fetches Alpaca account data including equity and daily change.
-     */
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("APCA-API-KEY-ID", API_KEY_ID_CLASS)
+                .addHeader("APCA-API-SECRET-KEY", SECRET_KEY_CLASS)
+                .get()
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Handle request failure
+                runOnUiThread(() -> {
+                    Toast.makeText(MainActivity.this, "Failed to fetch Alpaca account", Toast.LENGTH_SHORT).show();
+                    progressBar.setVisibility(View.GONE);
+                });
+                Log.e("AlpacaAPI", "Error fetching account: ", e);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    String responseBody = response.body().string();
+                    JsonObject account = gson.fromJson(responseBody, JsonObject.class);
+
+                    // Extract 'equity' and 'last_equity' from the response
+                    double equity = account.has("equity") ? account.get("equity").getAsDouble() : 0.0;
+                    double lastEquity = account.has("last_equity") ? account.get("last_equity").getAsDouble() : equity; // Default to current equity if last_equity is missing
+
+                    // Calculate daily change
+                    double dailyChange = equity - lastEquity;
+
+                    runOnUiThread(() -> {
+                        // Update Equity TextView
+                        alpacaEquityClass.setText(String.format("AClass Equity: $%.2f", equity));
+                        alpacaEquityClass.setTextColor(Color.YELLOW);
+
+                        // Update Daily Change TextView
+                        alpacaDailyChangeClass.setText(String.format("Daily Change: $%.2f", dailyChange));
+
+                        // Set color based on daily change value
+                        if (dailyChange < 0) {
+                            alpacaDailyChangeClass.setTextColor(Color.RED);
+                        } else if (dailyChange > 0) {
+                            alpacaDailyChangeClass.setTextColor(Color.GREEN);
+                        } else {
+                            alpacaDailyChangeClass.setTextColor(Color.GRAY); // Neutral color for no change
+                        }
+
+                        // Optional: Display percentage change
+                        double percentageChange = lastEquity != 0 ? (dailyChange / lastEquity) * 100 : 0.0;
+                        alpacaDailyChangeClass.setText(String.format("Daily Change: $%.2f (%.2f%%)", dailyChange, percentageChange));
+
+                        // Fetch holdings after fetching equity
+                        fetchAlpacaHoldingsClass();
+
+                        // Hide progress bar if it's visible
+                        progressBar.setVisibility(View.GONE);
+                    });
+                } else {
+                    runOnUiThread(() -> {
+                        Toast.makeText(MainActivity.this, "Failed to fetch Alpaca account", Toast.LENGTH_SHORT).show();
+                        progressBar.setVisibility(View.GONE);
+                    });
+                    Log.e("AlpacaAPI", "Unsuccessful response: " + response.code());
+                }
+            }
+
+        });
+    }
     private void fetchAlpacaAccount() {
         String url = "https://paper-api.alpaca.markets/v2/account";
 
@@ -337,16 +396,13 @@ public class MainActivity extends AppCompatActivity {
 
         });
     }
-
-
-
-    private void fetchAlpacaHoldings() {
+    private void fetchAlpacaHoldingsClass() {
         String url = "https://paper-api.alpaca.markets/v2/positions";
 
         Request request = new Request.Builder()
                 .url(url)
-                .addHeader("APCA-API-KEY-ID", API_KEY_ID)
-                .addHeader("APCA-API-SECRET-KEY", SECRET_KEY)
+                .addHeader("APCA-API-KEY-ID", API_KEY_ID_CLASS)
+                .addHeader("APCA-API-SECRET-KEY", SECRET_KEY_CLASS)
                 .get()
                 .build();
 
@@ -388,6 +444,69 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     runOnUiThread(() -> {
+                        alpacaHoldingsClass.setText("Alpaca Holdings:\n" + holdingsBuilder.toString());
+                        alpacaHoldingsClass.setTextColor(Color.YELLOW); // Set text color to yellow
+
+                        progressBar.setVisibility(View.GONE);
+                    });
+                } else {
+                    runOnUiThread(() -> {
+                        Toast.makeText(MainActivity.this, "Failed to fetch Alpaca holdings", Toast.LENGTH_SHORT).show();
+                        progressBar.setVisibility(View.GONE);
+                    });
+                    Log.e("AlpacaAPI", "Unsuccessful response: " + response.code());
+                }
+            }
+        });
+    }
+    private void fetchAlpacaHoldings() {
+        String url = "https://paper-api.alpaca.markets/v2/positions";
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("APCA-API-KEY-ID", API_KEY_ID)
+                .addHeader("APCA-API-SECRET-KEY", SECRET_KEY)
+                .get()
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Handle request failure
+                runOnUiThread(() -> {
+                    Toast.makeText(MainActivity.this, "Failed to fetch Alpaca holdings", Toast.LENGTH_SHORT).show();
+                    progressBar.setVisibility(View.GONE);
+                });
+                Log.e("AlpacaAPI", "Error fetching holdings: ", e);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    String responseBody = response.body().string();
+                    JsonArray holdingsArray = gson.fromJson(responseBody, JsonArray.class);
+
+                    StringBuilder holdingsBuilder = new StringBuilder();
+                    if (holdingsArray.size() > 0) {
+                        for (JsonElement holdingElement : holdingsArray) {
+                            JsonObject holding = holdingElement.getAsJsonObject();
+                            String symbol = holding.get("symbol").getAsString();
+                            double qty = holding.get("qty").getAsDouble();
+                            double avgEntryPrice = holding.get("avg_entry_price").getAsDouble();
+                            double currentPrice = holding.get("current_price").getAsDouble();
+                            double marketValue = holding.get("market_value").getAsDouble();
+                            double changeToday = holding.get("change_today").getAsDouble(); // New line
+
+                            holdingsBuilder.append(String.format(
+                                    "%.1f shares @ $%.2f \n",
+                                    qty, currentPrice
+                            ));
+                        }
+                    } else {
+                        holdingsBuilder.append("No holdings.");
+                    }
+
+                    runOnUiThread(() -> {
                         alpacaHoldings.setText("Alpaca Holdings:\n" + holdingsBuilder.toString());
                         alpacaHoldings.setTextColor(Color.YELLOW); // Set text color to yellow
 
@@ -403,10 +522,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
-    /**
-     * Fetches the most recent model metrics from Firebase Firestore and displays them.
-     */
     private void fetchModelMetrics() {
         // Reference to the 'model_evaluations' collection
         db.collection("model_evaluations")
@@ -445,20 +560,12 @@ public class MainActivity extends AppCompatActivity {
                 });
         fetchModelAccuracy();
     }
-
-    /**
-     * Calculates model accuracy based on RMSE and MAE.
-     * Modify this method based on how you define accuracy.
-     * For demonstration, let's assume accuracy is inversely related to RMSE and MAE.
-     */
     private double calculateModelAccuracy(double rmse, double mae) {
         // Example calculation (modify as per your actual accuracy computation)
         if (rmse == 0 && mae == 0) return 100.0;
         double accuracy = 100.0 - ((rmse + mae) / 2);
         return Math.max(accuracy, 0.0); // Ensure accuracy isn't negative
     }
-
-
     private void fetchModelAccuracy() {
         // Reference to the 'predictions/GOOG/metrics/latest' document
         DocumentReference metricsRef = db.collection("predictions")
@@ -494,11 +601,6 @@ public class MainActivity extends AppCompatActivity {
                     Log.e("Firestore", "Error fetching model accuracy from 'predictions/GOOG/metrics/latest'", e);
                 });
     }
-
-    /**
-     * Fetches the Control Portfolio from Firestore, retrieves current prices from Alpaca API,
-     * calculates the total value, and updates the UI.
-     */
     private void fetchControlPortfolio() {
         // Reference to the 'Control' collection and 'latest' document
         DocumentReference controlRef = db.collection("Control").document("latest");
@@ -586,21 +688,10 @@ public class MainActivity extends AppCompatActivity {
                     Log.e("Firestore", "Error fetching Control Portfolio", e);
                 });
     }
-
-    /**
-     * Callback interface for fetching current price.
-     */
     private interface PriceCallback {
         void onPriceFetched(double currentPrice);
         void onPriceFetchFailed(String errorMessage);
     }
-
-    /**
-     * Fetches the current price for a given ticker from Firestore.
-     *
-     * @param ticker The stock ticker symbol.
-     * @param callback The callback to handle the fetched price or failure.
-     */
     private void fetchCurrentPrice(String ticker, PriceCallback callback) {
         DocumentReference docRef = db.collection("predictions").document(ticker);
         docRef.get()

@@ -22,6 +22,9 @@ android {
         buildConfigField "String", "ALPACA_API_KEY_ID", "\"PKV7KQ8MNZXOO055EIGM\""
         buildConfigField "String", "ALPACA_SECRET_KEY", "\"L6648RHLgUNhv9rxbnSxAqyzEgsJTWzyrxA8yzG0\""
 
+        buildConfigField "String", "ALPACA_API_KEY_ID_CLASS", "\"PKN3PSY5FADSMFJWCOWI\""
+        buildConfigField "String", "ALPACA_SECRET_KEY_CLASS", "\"Pv4ipW9hr9mrT0uF0hdTZC39ogJl12KWcUMsJWWT\""
+
     }
 
     buildTypes {
