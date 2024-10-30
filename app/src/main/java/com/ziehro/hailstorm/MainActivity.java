@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText frequencyInput;
     private ProgressBar progressBar;
 
-    private Button updateFrequencyButton, resetControlPortfolio, fetchPortfolioButton, dailyPerformanceBtn, openPortfolioAllButton;
+    private Button updateFrequencyButton, resetControlPortfolio, fetchPortfolioButton, dailyPerformanceBtn, dailyPerformanceBtnClass, openPortfolioAllButton;
 
     private TextView modelR2, modelMAE, modelRMSE, modelAccuracy, modelAccuracyClass, controlPortfolioTotalValue, modelF1, modelAccClass, modelPrecision; // Added TextViews for model metrics
 
@@ -102,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
         resetControlPortfolio = findViewById(R.id.resetControlButton);
         fetchPortfolioButton = findViewById(R.id.fetchPortfolioButton);
         dailyPerformanceBtn = findViewById(R.id.dailyPerformaceBtn);
+        dailyPerformanceBtnClass = findViewById(R.id.dailyPerformaceBtnClass);
         openPortfolioAllButton = findViewById(R.id.openPortfolioAllActivityButton);
 
         commandSpinner = findViewById(R.id.commandSpinner);
@@ -118,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
         //resetControlPortfolio.setOnClickListener(v -> showConfirmationDialog("Are you sure you want to reset the control portfolio?", () -> createControlPortfolio(v)));
         fetchPortfolioButton.setOnClickListener(v -> fetchPortfolio());
         dailyPerformanceBtn.setOnClickListener(v -> openPortfolioActivity());
+        dailyPerformanceBtnClass.setOnClickListener(v -> openPortfolioActivityClass());
         openPortfolioAllButton.setOnClickListener(v -> openPortfolioAllActivity());
         sendCommandButton.setOnClickListener(v -> sendSelectedCommand());
     }
@@ -184,6 +186,10 @@ public class MainActivity extends AppCompatActivity {
     }
     private void openPortfolioActivity() {
         Intent intent = new Intent(MainActivity.this, PortfolioActivity.class);
+        startActivity(intent);
+    }
+    private void openPortfolioActivityClass() {
+        Intent intent = new Intent(MainActivity.this, PortfolioActivityClass.class);
         startActivity(intent);
     }
     private void openPortfolioAllActivity() {

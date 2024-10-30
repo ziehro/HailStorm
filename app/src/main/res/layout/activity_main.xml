@@ -229,6 +229,13 @@
             android:orientation="horizontal"
             android:padding="8dp">
 
+            <Button
+                android:id="@+id/dailyPerformaceBtn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Daily Changes" />
+
             <TextView
                 android:id="@+id/textView2"
                 android:layout_width="0dp"
@@ -238,9 +245,10 @@
                 android:text="View" />
 
             <Button
-                android:id="@+id/dailyPerformaceBtn"
+                android:id="@+id/dailyPerformaceBtnClass"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="Daily Changes" />
 
             <Button
@@ -260,6 +268,30 @@
             android:visibility="gone" />
 
         <!-- Update Frequency and Refresh Buttons -->
+
+        <!-- Command Spinner -->
+        <Spinner
+            android:id="@+id/commandSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:spinnerMode="dropdown" />
+
+        <!-- Send Command Button -->
+        <Button
+            android:id="@+id/sendCommandButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:layout_margin="16dp"
+            android:text="Send Command" />
+
+        <!-- Progress Bar -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -285,29 +317,6 @@
                 android:layout_height="wrap_content"
                 android:text="Refresh" />
         </LinearLayout>
-
-        <!-- Command Spinner -->
-        <Spinner
-            android:id="@+id/commandSpinner"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:spinnerMode="dropdown" />
-
-        <!-- Send Command Button -->
-        <Button
-            android:id="@+id/sendCommandButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="right"
-            android:layout_margin="16dp"
-            android:text="Send Command" />
-
-        <!-- Progress Bar -->
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
 
     </LinearLayout>
 </ScrollView>

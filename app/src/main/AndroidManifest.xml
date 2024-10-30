@@ -46,6 +46,8 @@
         <!-- Portfolio Activity -->
         <activity android:name=".PortfolioActivity">
         </activity>
+        <activity android:name=".PortfolioActivityClass">
+        </activity>
 
     </application>
 
