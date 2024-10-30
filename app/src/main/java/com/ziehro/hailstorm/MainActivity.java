@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Button updateFrequencyButton, resetControlPortfolio, fetchPortfolioButton, dailyPerformanceBtn, openPortfolioAllButton;
 
-    private TextView modelR2, modelMAE, modelRMSE, modelAccuracy, controlPortfolioTotalValue; // Added TextViews for model metrics
+    private TextView modelR2, modelMAE, modelRMSE, modelAccuracy, modelAccuracyClass, controlPortfolioTotalValue, modelF1, modelAccClass, modelPrecision; // Added TextViews for model metrics
 
     private TextView alpacaEquity, alpacaHoldings, alpacaDailyChange; // Added alpacaDailyChange
     private TextView alpacaEquityClass, alpacaHoldingsClass, alpacaDailyChangeClass; // Added alpacaDailyChange
@@ -84,6 +84,11 @@ public class MainActivity extends AppCompatActivity {
         modelMAE = findViewById(R.id.modelMAE);
         modelRMSE = findViewById(R.id.modelRMSE);
         modelAccuracy = findViewById(R.id.modelAccuracy);
+
+        modelF1 = findViewById(R.id.modelF1);
+        modelPrecision = findViewById(R.id.modelPrecision);
+        modelAccClass = findViewById(R.id.modelAcc);
+        modelAccuracyClass = findViewById(R.id.modelAccuracyClass);
 
         alpacaEquity = findViewById(R.id.alpacaEquity);
         alpacaHoldings = findViewById(R.id.alpacaHoldings);
@@ -190,7 +195,9 @@ public class MainActivity extends AppCompatActivity {
         fetchAlpacaAccount();
         fetchAlpacaAccountClass();
         fetchModelMetrics();
+        fetchModelMetricsClass();
         fetchModelAccuracy();
+        fetchModelAccuracyClass();
         fetchControlPortfolio();
     }
     public void createControlPortfolio(View view) {
@@ -560,6 +567,45 @@ public class MainActivity extends AppCompatActivity {
                 });
         fetchModelAccuracy();
     }
+
+    private void fetchModelMetricsClass() {
+        // Reference to the 'model_evaluations' collection
+        db.collection("model_evaluations_class")
+                .orderBy("__name__") // Order by document ID (date)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        // Assuming documents are named as 'YYYY-MM-DD', the last document is the most recent
+                        List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
+                        DocumentSnapshot latestDocument = documents.get(documents.size() - 1);
+
+                        Double F1 = latestDocument.getDouble("F1_Score");
+                        Double Accuracy = latestDocument.getDouble("Accuracy");
+                        Double Precision = latestDocument.getDouble("Precision");
+
+                        runOnUiThread(() -> {
+                            modelF1.setText(String.format("F1: %.2f", F1 != null ? F1 : 0.0));
+                            modelAccClass.setText(String.format("Acc: %.2f", Accuracy != null ? Accuracy : 0.0));
+                            modelPrecision.setText(String.format("Pre: %.2f", Precision != null ? Precision : 0.0));
+
+                        });
+                    } else {
+                        runOnUiThread(() -> {
+                            modelF1.setText("F1: N/A");
+                            modelAccClass.setText("Acc: N/A");
+                            modelPrecision.setText("Pre: N/A");
+                        });
+                        Log.w("Firestore", "No model metrics documents found.");
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    runOnUiThread(() -> {
+                        Toast.makeText(MainActivity.this, "Failed to fetch model metrics.", Toast.LENGTH_SHORT).show();
+                    });
+                    Log.e("Firestore", "Error fetching model metrics", e);
+                });
+        fetchModelAccuracy();
+    }
     private double calculateModelAccuracy(double rmse, double mae) {
         // Example calculation (modify as per your actual accuracy computation)
         if (rmse == 0 && mae == 0) return 100.0;
@@ -585,11 +631,47 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         runOnUiThread(() -> {
-                            modelAccuracy.setText(String.format("Model Accuracy: %.2f%%", accuracy));
+                            modelAccuracy.setText(String.format("Actual Accuracy: %.2f%%", accuracy));
                         });
                     } else {
                         runOnUiThread(() -> {
                             modelAccuracy.setText("Model Accuracy: N/A");
+                        });
+                        Log.w("Firestore", "'predictions/GOOG/metrics/latest' document does not exist.");
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    runOnUiThread(() -> {
+                        Toast.makeText(MainActivity.this, "Failed to fetch model accuracy.", Toast.LENGTH_SHORT).show();
+                    });
+                    Log.e("Firestore", "Error fetching model accuracy from 'predictions/GOOG/metrics/latest'", e);
+                });
+    }
+
+    private void fetchModelAccuracyClass() {
+        // Reference to the 'predictions/GOOG/metrics/latest' document
+        DocumentReference metricsRef = db.collection("predictions_class")
+                .document("GOOG");
+
+        metricsRef.get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        Double correct = documentSnapshot.getDouble("correct_predictions");
+                        Double total = documentSnapshot.getDouble("total_predictions");
+
+                        double accuracy;
+                        if (correct != null && total != null && total > 0) {
+                            accuracy = (correct / total) * 100;
+                        } else {
+                            accuracy = 0.0;
+                        }
+
+                        runOnUiThread(() -> {
+                            modelAccuracyClass.setText(String.format("Actual Accuracy: %.2f%%", accuracy));
+                        });
+                    } else {
+                        runOnUiThread(() -> {
+                            modelAccuracyClass.setText("Model Accuracy: N/A");
                         });
                         Log.w("Firestore", "'predictions/GOOG/metrics/latest' document does not exist.");
                     }

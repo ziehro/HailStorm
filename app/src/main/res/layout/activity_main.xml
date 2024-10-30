@@ -49,17 +49,19 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:padding="16dp"
+                android:padding="0dp"
                 android:text="Alpaca Equity: $0.00"
-                android:textSize="18sp"
+                android:textSize="18dp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/alpacaEquityClass"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_gravity="right|end"
                 android:layout_weight="1"
-                android:padding="16dp"
+                android:gravity="end"
+                android:padding="0dp"
                 android:text="Alpaca Equity: $0.00"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -75,8 +77,8 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:paddingLeft="16dp"
-                android:paddingBottom="16dp"
+                android:paddingLeft="8dp"
+                android:paddingBottom="0dp"
                 android:text="Daily Change: $0.00"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -85,9 +87,12 @@
                 android:id="@+id/alpacaDailyChangeClass"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_gravity="right"
                 android:layout_weight="1"
-                android:paddingLeft="16dp"
-                android:paddingBottom="16dp"
+                android:gravity="right"
+                android:paddingLeft="0dp"
+                android:paddingRight="8dp"
+                android:paddingBottom="0dp"
                 android:text="Daily Change: $0.00"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -111,7 +116,7 @@
                 android:id="@+id/alpacaHoldingsClass"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:padding="8dp"
+                android:padding="0dp"
                 android:text="Alpaca Holdings: "
                 android:textSize="16sp" />
         </LinearLayout>
@@ -123,7 +128,7 @@
             android:padding="8dp">
 
             <TextView
-                android:id="@+id/modelAccuracy2"
+                android:id="@+id/modelAccuracy"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -131,9 +136,12 @@
                 android:textSize="16sp" />
 
             <TextView
-                android:id="@+id/modelAccuracy"
+                android:id="@+id/modelAccuracyClass"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:layout_weight="1"
+                android:gravity="right"
                 android:text="Accuracy: N/A"
                 android:textSize="16sp" />
         </LinearLayout>
@@ -196,7 +204,17 @@
                     android:id="@+id/modelRMSE"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:text="RMSE: N/A"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/modelPrecision"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="right"
+                    android:text="Prec: N/A"
                     android:textSize="16sp" />
             </LinearLayout>
 
