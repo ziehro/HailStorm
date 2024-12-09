@@ -546,14 +546,14 @@ public class MainActivity extends AppCompatActivity {
                         List<DocumentSnapshot> documents = queryDocumentSnapshots.getDocuments();
                         DocumentSnapshot latestDocument = documents.get(documents.size() - 1);
 
-                        Double r2 = latestDocument.getDouble("R2_Score");
-                        Double mae = latestDocument.getDouble("MAE");
-                        Double rmse = latestDocument.getDouble("RMSE");
+                        Double r2 = latestDocument.getDouble("Accuracy");
+                        Double mae = latestDocument.getDouble("F1");
+                        Double rmse = latestDocument.getDouble("Pre");
 
                         runOnUiThread(() -> {
-                            modelR2.setText(String.format("R²: %.2f", r2 != null ? r2 : 0.0));
-                            modelMAE.setText(String.format("MAE: %.2f", mae != null ? mae : 0.0));
-                            modelRMSE.setText(String.format("RMSE: %.2f", mae != null ? rmse : 0.0));
+                            modelR2.setText(String.format("Acc: %.2f", r2 != null ? r2 : 0.0));
+                            modelMAE.setText(String.format("F1: %.2f", mae != null ? mae : 0.0));
+                            modelRMSE.setText(String.format("Pre: %.2f", mae != null ? rmse : 0.0));
                             //modelAccuracy.setText(String.format("Model Accuracy: %.2f%%", calculateModelAccuracy(rmse, mae)));
                         });
                     } else {
